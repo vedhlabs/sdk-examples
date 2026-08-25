@@ -32,7 +32,6 @@ class ExampleStore:
 
     def _connect(self) -> sqlite3.Connection:
         db = sqlite3.connect(self.path, timeout=10)
-        db.execute("PRAGMA journal_mode=WAL")
         db.execute("PRAGMA busy_timeout=10000")
         return db
 
@@ -115,4 +114,3 @@ class ExampleStore:
 
 
 store = ExampleStore()
-

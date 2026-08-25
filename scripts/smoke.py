@@ -157,6 +157,23 @@ def run_checks() -> None:
     else:
         raise RuntimeError("workers did not converge every documented schedule")
 
+    for command, expected_paused in (("pause", True), ("resume", False)):
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "quickstart.schedule_admin",
+                command,
+                "quickstart.daily-report",
+            ],
+            cwd=ROOT,
+            env=os.environ.copy(),
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert base.get_schedule("quickstart.daily-report").paused is expected_paused
+
 
 def main() -> None:
     processes: list[subprocess.Popen] = []
@@ -204,4 +221,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
