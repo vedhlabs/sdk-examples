@@ -1,3 +1,6 @@
+import ogha
+
+from checkout.workflows import charge_order, create_shipment
 from checkout.workflows import checkout as compact_checkout
 from ecommerce.workflow import checkout as ecommerce_checkout
 from lending.workflows import application, month_end, statement
@@ -44,6 +47,11 @@ def test_schedules_and_rpc_method_are_declared():
         schedule = workflow.__ogha_spec__.schedule
         assert schedule.schedule_id == schedule_id
         assert not (
-            schedule.overlap == 1 and schedule.catch_up_window_ms > 0
+            schedule.overlap == ogha.OVERLAP_SKIP and schedule.catch_up_window_ms > 0
         ), "OVERLAP_SKIP and catch-up are mutually exclusive"
     assert risk_score.__ogha_step_name__ == "risk.score"
+
+
+def test_compact_checkout_places_the_pivot_at_payment():
+    assert charge_order.__ogha_spec__.pivot is True
+    assert create_shipment.__ogha_spec__.pivot is False

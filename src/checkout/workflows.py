@@ -1,13 +1,12 @@
 import ogha
 
-from checkout import steps as _steps  # noqa: F401 - registers named compensation
 from checkout.adapters import payments, shipping
 
 
 @ogha.step(
     retry=ogha.RetryPolicy(max_attempts=5),
     timeout=30,
-    compensate_with="refund_charge",
+    pivot=True,
 )
 def charge_order(order: dict) -> dict:
     return payments.charge(
@@ -17,7 +16,7 @@ def charge_order(order: dict) -> dict:
     )
 
 
-@ogha.step(retry=ogha.RetryPolicy(max_attempts=5), timeout=30, pivot=True)
+@ogha.step(retry=ogha.RetryPolicy(max_attempts=5), timeout=30)
 def create_shipment(order: dict) -> dict:
     return shipping.create(order=order, idempotency_key=f"order:{order['id']}:shipment")
 

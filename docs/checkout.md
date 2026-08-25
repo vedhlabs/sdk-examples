@@ -9,16 +9,16 @@ python -m checkout.worker
 python -m checkout.submit
 ```
 
-`checkout.charge_order` uses `order:<id>:charge` at the provider boundary. If shipping fails before
-the pivot, the declared compensation can reimburse the recorded charge. Shipment creation is the
-point of no return in this intentionally small example.
+`checkout.charge_order` uses `order:<id>:charge` at the provider boundary and is the point of no
+return in this intentionally small example. A shipping failure after capture becomes a visible
+business exception handled by an explicit refund process; it is never silently described as if
+the payment did not occur.
 
 ```mermaid
 flowchart LR
-    A[charge order] --> B[record charge]
+    A[charge order with stable key] --> B[record charge]
     B --> C[create shipment]
     C --> D[record tracking]
-    B -. failure before pivot .-> R[refund charge]
 ```
 
 Source: [`src/checkout/workflows.py`](../src/checkout/workflows.py),
@@ -36,4 +36,3 @@ creates deterministic occurrence run IDs even while workers are offline. The wor
 execute an occurrence, not to remember that the occurrence exists.
 
 Source: [`src/reports/workflows.py`](../src/reports/workflows.py).
-
