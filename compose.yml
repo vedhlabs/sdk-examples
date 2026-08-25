@@ -1,0 +1,33 @@
+# Local Ogha stack used by every example in this repository.
+name: ogha-sdk-examples
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ogha
+      POSTGRES_PASSWORD: ogha-local
+      POSTGRES_DB: ogha
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ogha -d ogha"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - ogha-postgres:/var/lib/postgresql/data
+
+  ogha:
+    image: public.ecr.aws/h6s8i3h8/ogha:0.1.2-obf
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - --storage=postgres
+      - --dsn=postgres://ogha:ogha-local@postgres:5432/ogha?sslmode=disable
+      - --auth-disabled
+      - --addr=0.0.0.0:8080
+    ports:
+      - "8080:8080"
+
+volumes:
+  ogha-postgres:
+

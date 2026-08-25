@@ -1,0 +1,56 @@
+{
+  "src/pages/ogha/index.md": [
+    "src/checkout/workflows.py",
+    "src/checkout/steps.py",
+    "src/reports/workflows.py"
+  ],
+  "src/pages/ogha/python.md": [
+    "compose.yml",
+    "src/quickstart/client.py",
+    "src/quickstart/workflows.py",
+    "src/quickstart/worker.py",
+    "src/quickstart/submit.py",
+    "src/quickstart/crash_workflow.py",
+    "src/quickstart/crash_worker.py",
+    "src/quickstart/schedules.py",
+    "src/quickstart/schedule_admin.py",
+    "src/primitives/methods.py",
+    "src/primitives/worker.py",
+    "src/primitives/operator.py"
+  ],
+  "src/pages/ogha/use-cases/index.md": [
+    "docs/ecommerce.md",
+    "docs/lending.md",
+    "docs/trading.md",
+    "docs/primitives.md"
+  ],
+  "src/pages/ogha/use-cases/order.md": [
+    "src/ecommerce/client.py",
+    "src/ecommerce/steps.py",
+    "src/ecommerce/workflow.py",
+    "src/ecommerce/webhooks.py",
+    "src/ecommerce/submit.py",
+    "src/ecommerce/worker.py"
+  ],
+  "src/pages/ogha/use-cases/lending.md": [
+    "src/lending/client.py",
+    "src/lending/steps.py",
+    "src/lending/stages.py",
+    "src/lending/workflows.py",
+    "src/lending/worker.py",
+    "src/lending/submit.py",
+    "src/lending/approvals.py"
+  ],
+  "src/pages/ogha/use-cases/trading.md": [
+    "src/trading/client.py",
+    "src/trading/adapters/alpaca.py",
+    "src/trading/adapters/mock.py",
+    "src/trading/domain.py",
+    "src/trading/steps.py",
+    "src/trading/workflows.py",
+    "src/trading/worker.py",
+    "src/trading/operator.py",
+    "src/trading/submit.py"
+  ]
+}
+
