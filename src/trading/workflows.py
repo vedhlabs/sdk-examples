@@ -136,7 +136,6 @@ async def trading_rebalance(ctx, request: dict) -> dict:
     schedule_id="trading.rebalance-day",
     context={"portfolios": ["growth", "income"]},
     overlap=ogha.OVERLAP_SKIP,
-    catch_up_window_ms=4 * 60 * 60 * 1000,
     revision=1,
 )
 @ogha.workflow(name="trading.rebalance-day", version="1", target="python://trading")

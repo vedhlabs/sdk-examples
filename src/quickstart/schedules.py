@@ -22,7 +22,6 @@ def build_report(report: str, occurrence: str) -> dict:
     schedule_id="quickstart.daily-report",
     context={"report": "daily-kpis"},
     overlap=ogha.OVERLAP_SKIP,
-    catch_up_window_ms=6 * 60 * 60 * 1000,
     revision=1,
 )
 @ogha.workflow(name="quickstart.daily-report", target="python://quickstart")
@@ -31,4 +30,3 @@ async def daily_report(ctx, request: dict) -> dict:
     report = await ctx.call(build_report, request["report"], occurrence)
     ctx.emit("ReportBuilt", report)
     return report
-

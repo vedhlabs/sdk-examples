@@ -35,8 +35,15 @@ def test_fanout_workflows_are_distributed():
 
 
 def test_schedules_and_rpc_method_are_declared():
-    assert daily_report.__ogha_spec__.schedule.schedule_id == "quickstart.daily-report"
-    assert reports_daily.__ogha_spec__.schedule.schedule_id == "reports.daily-kpis"
-    assert rebalance_day.__ogha_spec__.schedule.schedule_id == "trading.rebalance-day"
+    schedules = {
+        daily_report: "quickstart.daily-report",
+        reports_daily: "reports.daily-kpis",
+        rebalance_day: "trading.rebalance-day",
+    }
+    for workflow, schedule_id in schedules.items():
+        schedule = workflow.__ogha_spec__.schedule
+        assert schedule.schedule_id == schedule_id
+        assert not (
+            schedule.overlap == 1 and schedule.catch_up_window_ms > 0
+        ), "OVERLAP_SKIP and catch-up are mutually exclusive"
     assert risk_score.__ogha_step_name__ == "risk.score"
-
