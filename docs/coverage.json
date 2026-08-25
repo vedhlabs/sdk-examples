@@ -1,7 +1,7 @@
 {
   "src/pages/ogha/index.md": [
     "src/checkout/workflows.py",
-    "src/checkout/steps.py",
+    "src/ecommerce/steps.py",
     "src/reports/workflows.py"
   ],
   "src/pages/ogha/python.md": [
@@ -53,4 +53,3 @@
     "src/trading/submit.py"
   ]
 }
-
