@@ -12,16 +12,22 @@ class RecordingClient:
         self.terminal = terminal
         self.calls = []
 
-    def submit(self, workflow, payload, *, run_id, target):
-        self.calls.append(("submit", workflow, json.loads(payload), run_id, target))
-        return SimpleNamespace(run_id=run_id)
-
-    def result(self, run_id, *, timeout_s, poll_s):
-        self.calls.append(("result", run_id, timeout_s, poll_s))
+    def execute(self, workflow, payload, *, run_id, target, wait_timeout_s, poll_s):
+        self.calls.append(
+            (
+                "execute",
+                workflow,
+                json.loads(payload),
+                run_id,
+                target,
+                wait_timeout_s,
+                poll_s,
+            )
+        )
         return self.terminal
 
 
-def test_sync_client_submits_once_then_waits_for_the_same_run():
+def test_sync_client_executes_once_and_returns_the_terminal_run():
     order = example_order(275, order_id="sync-order-42")
     client = RecordingClient(
         SimpleNamespace(
@@ -38,13 +44,14 @@ def test_sync_client_submits_once_then_waits_for_the_same_run():
     assert output == {"order_id": "sync-order-42", "total": 275}
     assert client.calls == [
         (
-            "submit",
+            "execute",
             "quickstart.checkout",
             order,
             "sync-order-42",
             "python://quickstart",
+            12,
+            0.5,
         ),
-        ("result", "sync-order-42", 12, 0.5),
     ]
 
 

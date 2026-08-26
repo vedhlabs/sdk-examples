@@ -43,7 +43,12 @@ def send_receipt(order: dict, charge: dict) -> dict:
     )
 
 
-@ogha.workflow(name="quickstart.checkout", version="1", target="python://quickstart")
+@ogha.workflow(
+    name="quickstart.checkout",
+    version="1",
+    execution="async_sticky",
+    target="python://quickstart",
+)
 async def checkout(ctx, order: dict) -> dict:
     validated = await ctx.call(validate_order, order)
     reservation = await ctx.call(reserve_inventory, order)
@@ -57,4 +62,3 @@ async def checkout(ctx, order: dict) -> dict:
         "charge_id": charge["charge_id"],
         "receipt_id": receipt["message_id"],
     }
-

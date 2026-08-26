@@ -2,8 +2,8 @@ import argparse
 import json
 import uuid
 
-from example_support.config import decode_output
 from quickstart.client import connect
+from quickstart.sync_client import run_checkout_sync
 
 
 def main() -> None:
@@ -24,6 +24,12 @@ def main() -> None:
         "items": [{"sku": "starter-kit", "price": args.amount, "qty": 1}],
     }
     client = connect()
+    if args.wait:
+        run_id, output = run_checkout_sync(client, order, timeout_s=30)
+        print(run_id)
+        print(json.dumps(output, indent=2, sort_keys=True))
+        return
+
     run = client.submit(
         "quickstart.checkout",
         json.dumps(order).encode(),
@@ -31,9 +37,6 @@ def main() -> None:
         target="python://quickstart",
     )
     print(run.run_id)
-    if args.wait:
-        terminal = client.result(run.run_id, timeout_s=30)
-        print(json.dumps(decode_output(terminal.output), indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":

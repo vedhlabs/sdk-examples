@@ -31,8 +31,8 @@ python -m quickstart.sync_client
 ```
 
 The worker imports the workflow definitions, listens on `python://quickstart`, and executes work.
-The synchronous client submits one JSON input and waits for the terminal result. The run still
-executes durably in the worker and survives if the client disconnects.
+The synchronous client uses `Client.execute` to submit one JSON input and wait for the terminal
+result. The run still executes durably in the worker and survives if the client disconnects.
 
 ## Client waiting is not an execution mode
 

@@ -43,31 +43,45 @@ reservation, charge, and receipt IDs. Re-run the command to create a new busines
 ## Synchronous caller versus asynchronous submission
 
 Ogha has two worker-placement modes: `async_sticky` and `async_distributed`. Synchronous waiting is
-an independent client choice, not a third mode. The dedicated client makes that boundary visible:
+an independent client choice, not a third mode. The workflow declares its real placement:
 
 ```python
-submitted = client.submit(
+@ogha.workflow(
+    name="quickstart.checkout",
+    execution="async_sticky",
+    target="python://quickstart",
+)
+async def checkout(ctx, order):
+    validated = await ctx.call(validate_order, order)
+    return {"order_id": order["id"], "total": validated["total"]}
+```
+
+The dedicated client then chooses to wait:
+
+```python
+terminal = client.execute(
     "quickstart.checkout",
     json.dumps(order).encode(),
     run_id=order["id"],
     target="python://quickstart",
+    wait_timeout_s=30,
 )
-terminal = client.result(submitted.run_id, timeout_s=30)
 ```
 
-The first call records the run and returns its ID. The second call waits for that same run to become
-terminal. If the waiting process is killed, the engine and worker continue because neither the run
-nor its lease belongs to the client connection.
+`execute` submits the run and waits for that same run to become terminal. Internally it uses the
+same durable submission and status polling as `submit` followed by `result`; it is a convenience,
+not a different server operation. If the waiting process is killed, the engine and worker continue
+because neither the run nor its lease belongs to the client connection.
 
 ```mermaid
 sequenceDiagram
     participant C as sync_client.py
     participant E as Ogha engine
     participant W as async-sticky worker
-    C->>E: submit(run_id)
+    C->>E: execute: submit(run_id)
     E-->>C: accepted run
     E->>W: execute root task
-    loop client-side wait
+    loop execute polls status
         C->>E: status(run_id)
         E-->>C: running
     end
@@ -84,9 +98,9 @@ python -m quickstart.sync_client  # waits and prints the decoded result
 python -m quickstart.submit --wait  # compact equivalent of the second command
 ```
 
-The synchronous helper also checks the terminal state. A failed or canceled workflow becomes an
-application error instead of being mistaken for a successful empty response. Its timeout limits how
-long this caller waits; it does not cancel the durable run.
+The example helper checks the terminal record returned by `execute`. A failed or canceled workflow
+becomes an application error instead of being mistaken for a successful empty response. Its wait
+timeout limits how long this caller waits; it does not cancel the durable run.
 
 Canonical files:
 

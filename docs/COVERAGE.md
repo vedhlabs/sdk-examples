@@ -15,5 +15,6 @@ Python lives here. Every real source-file label in the six Ogha pages links to a
 [`coverage.json`](coverage.json) is the machine-readable contract. The docs build is separately
 checked after links are updated so a renamed file cannot leave a plausible-looking dead example.
 
-The quickstart’s `sync_client.py` is deliberately classified as a caller example. It performs
-`submit` followed by `result` and does not introduce an `execution="sync"` workflow declaration.
+The quickstart’s `sync_client.py` is deliberately classified as a caller example. It uses
+`Client.execute`, the SDK convenience for `submit` followed by `result`, and does not introduce an
+`execution="sync"` workflow declaration.

@@ -35,13 +35,14 @@ def run_checkout_sync(
     async-sticky or async-distributed placement, and the run survives if this
     caller disconnects.
     """
-    submitted = client.submit(
+    terminal = client.execute(
         "quickstart.checkout",
         json.dumps(order).encode(),
         run_id=str(order["id"]),
         target="python://quickstart",
+        wait_timeout_s=timeout_s,
+        poll_s=poll_s,
     )
-    terminal = client.result(submitted.run_id, timeout_s=timeout_s, poll_s=poll_s)
     if terminal.state is not ogha.RunState.COMPLETED:
         detail = f": {terminal.error}" if terminal.error else ""
         raise RuntimeError(f"run {terminal.run_id} ended {terminal.state.name}{detail}")
