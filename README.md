@@ -27,17 +27,37 @@ quickstart in two terminals:
 python -m quickstart.worker
 
 # terminal 2
-python -m quickstart.submit --wait
+python -m quickstart.sync_client
 ```
 
 The worker imports the workflow definitions, listens on `python://quickstart`, and executes work.
-The submitter sends one JSON input to the engine and, with `--wait`, prints the terminal result.
+The synchronous client submits one JSON input and waits for the terminal result. The run still
+executes durably in the worker and survives if the client disconnects.
+
+## Client waiting is not an execution mode
+
+Use the client style that matches the request boundary:
+
+```bash
+# Background/API submission: print the run ID and return immediately.
+python -m quickstart.submit
+
+# Request/response submission: block this process until the run is terminal.
+python -m quickstart.sync_client
+
+# The compact submitter supports the same waiting behavior as a flag.
+python -m quickstart.submit --wait
+```
+
+All three commands submit the same durable `quickstart.checkout` workflow. “Synchronous” only means
+the caller waits. Worker placement remains `async_sticky` or `async_distributed`; there is no
+`execution="sync"` workflow mode.
 
 ## Examples
 
 | Guide | Package | What it demonstrates |
 | :--- | :--- | :--- |
-| [Quickstart](docs/quickstart.md) | `quickstart` | steps, workflow, worker, submit, crash recovery, schedules |
+| [Quickstart](docs/quickstart.md) | `quickstart` | sync waiting, async submit, workflow placement, crash recovery, schedules |
 | [Checkout and reports](docs/checkout.md) | `checkout`, `reports` | provider idempotency, compensation shape, engine cron |
 | [Order workflow](docs/ecommerce.md) | `ecommerce` | fan-out, quorum, cancel, gate, webhook wait, sleep, emit |
 | [Lending](docs/lending.md) | `lending` | composed stages, KYC, bureau quorum, approval, disbursement, spawn |
@@ -97,4 +117,3 @@ placeholder bodies or ellipses.
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
-

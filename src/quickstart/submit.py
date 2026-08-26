@@ -9,7 +9,11 @@ from quickstart.client import connect
 def main() -> None:
     parser = argparse.ArgumentParser(description="Submit the quickstart checkout workflow")
     parser.add_argument("--amount", type=int, default=125)
-    parser.add_argument("--wait", action="store_true", help="wait for and print the result")
+    parser.add_argument(
+        "--wait",
+        action="store_true",
+        help="block this caller for the result (client behavior, not an execution mode)",
+    )
     args = parser.parse_args()
 
     order_id = f"QS-{uuid.uuid4().hex[:12]}"
@@ -34,4 +38,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

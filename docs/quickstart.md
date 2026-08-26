@@ -1,4 +1,4 @@
-# Quickstart, crash recovery, and schedules
+# Quickstart, synchronous waiting, crash recovery, and schedules
 
 This guide backs the Python SDK page. It starts with one checkout and then exposes the two cases
 that are easy to describe but important to see: a process dying in the middle of a step, and a cron
@@ -34,11 +34,59 @@ python -m quickstart.worker
 In another terminal:
 
 ```bash
-python -m quickstart.submit --wait
+python -m quickstart.sync_client
 ```
 
 Expected result: one `quickstart.checkout` run reaches `COMPLETED`; its output contains the order,
 reservation, charge, and receipt IDs. Re-run the command to create a new business order.
+
+## Synchronous caller versus asynchronous submission
+
+Ogha has two worker-placement modes: `async_sticky` and `async_distributed`. Synchronous waiting is
+an independent client choice, not a third mode. The dedicated client makes that boundary visible:
+
+```python
+submitted = client.submit(
+    "quickstart.checkout",
+    json.dumps(order).encode(),
+    run_id=order["id"],
+    target="python://quickstart",
+)
+terminal = client.result(submitted.run_id, timeout_s=30)
+```
+
+The first call records the run and returns its ID. The second call waits for that same run to become
+terminal. If the waiting process is killed, the engine and worker continue because neither the run
+nor its lease belongs to the client connection.
+
+```mermaid
+sequenceDiagram
+    participant C as sync_client.py
+    participant E as Ogha engine
+    participant W as async-sticky worker
+    C->>E: submit(run_id)
+    E-->>C: accepted run
+    E->>W: execute root task
+    loop client-side wait
+        C->>E: status(run_id)
+        E-->>C: running
+    end
+    W->>E: fulfill root task
+    C->>E: status(run_id)
+    E-->>C: completed output
+```
+
+Run both caller styles against the same worker:
+
+```bash
+python -m quickstart.submit       # returns the run ID immediately
+python -m quickstart.sync_client  # waits and prints the decoded result
+python -m quickstart.submit --wait  # compact equivalent of the second command
+```
+
+The synchronous helper also checks the terminal state. A failed or canceled workflow becomes an
+application error instead of being mistaken for a successful empty response. Its timeout limits how
+long this caller waits; it does not cancel the durable run.
 
 Canonical files:
 
@@ -46,6 +94,7 @@ Canonical files:
 - [`src/quickstart/workflows.py`](../src/quickstart/workflows.py)
 - [`src/quickstart/worker.py`](../src/quickstart/worker.py)
 - [`src/quickstart/submit.py`](../src/quickstart/submit.py)
+- [`src/quickstart/sync_client.py`](../src/quickstart/sync_client.py)
 
 ## Prove crash recovery
 
@@ -100,4 +149,3 @@ converge forward instead of overwriting a newer declaration with an older one.
 - An effect appears twice: the external adapter did not implement a stable idempotency key.
 - A workflow changes behavior after restart: it read time, randomness, environment, or network I/O
   in the workflow body instead of a recorded step.
-

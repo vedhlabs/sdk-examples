@@ -22,6 +22,7 @@ from example_support.config import connect, decode_output  # noqa: E402
 from example_support.promises import pending_promise  # noqa: E402
 from lending.client import connect as lending_connect  # noqa: E402
 from primitives.client import connect as primitives_connect  # noqa: E402
+from quickstart.sync_client import example_order, run_checkout_sync  # noqa: E402
 from trading.client import connect as trading_connect  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -71,6 +72,14 @@ def run_checks() -> None:
         "quickstart",
     )
     assert terminal(base, quickstart_id)["total"] == 125
+
+    sync_run_id, sync_result = run_checkout_sync(
+        base,
+        example_order(175, order_id=f"QS-SYNC-{SMOKE_ID}"),
+        timeout_s=30,
+    )
+    assert sync_run_id == f"QS-SYNC-{SMOKE_ID}"
+    assert sync_result["total"] == 175
 
     checkout_id = submit(
         base,

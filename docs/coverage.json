@@ -10,6 +10,7 @@
     "src/quickstart/workflows.py",
     "src/quickstart/worker.py",
     "src/quickstart/submit.py",
+    "src/quickstart/sync_client.py",
     "src/quickstart/crash_workflow.py",
     "src/quickstart/crash_worker.py",
     "src/quickstart/schedules.py",
