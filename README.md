@@ -15,7 +15,7 @@ git clone https://github.com/vedhlabs/sdk-examples.git
 cd sdk-examples
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev]"  # pins the verified App-facade SDK commit
 docker compose up -d
 ```
 
@@ -30,9 +30,21 @@ python -m quickstart.worker
 python -m quickstart.sync_client
 ```
 
-The worker imports the workflow definitions, listens on `python://quickstart`, and executes work.
-The synchronous client uses `Client.execute` to submit one JSON input and wait for the terminal
-result. The run still executes durably in the worker and survives if the client disconnects.
+The `quickstart.app` object owns registration, the engine connection, and the worker lifecycle.
+The synchronous caller uses `app.start(checkout, order).result()` and receives an ordinary Python
+value. The run still executes durably in the worker and survives if the caller disconnects.
+
+## The durable-promise mental model
+
+Every durable function call immediately returns an awaitable handle. Ogha stores the identified
+operation and, after it commits a terminal result, replay reads that result instead of executing the
+function again. In short: **call returns a promise; Ogha stores the promise; recovery reuses its
+committed value**.
+
+That model explains the API, but it is not the whole distributed-systems contract. Work that never
+committed may retry; task leases and fencing reject stale workers; durable waits need persisted
+wake-up registration; and an external payment or email still needs provider idempotency or
+reconciliation.
 
 ## Client waiting is not an execution mode
 
@@ -59,10 +71,10 @@ the caller waits. Worker placement remains `async_sticky` or `async_distributed`
 | :--- | :--- | :--- |
 | [Quickstart](docs/quickstart.md) | `quickstart` | sync waiting, async submit, workflow placement, crash recovery, schedules |
 | [Checkout and reports](docs/checkout.md) | `checkout`, `reports` | provider idempotency, compensation shape, engine cron |
-| [Order workflow](docs/ecommerce.md) | `ecommerce` | fan-out, quorum, cancel, gate, webhook wait, sleep, emit |
+| [Order workflow](docs/ecommerce.md) | `ecommerce` | fan-out, quorum, cancel, approval, webhook signal, sleep, event |
 | [Lending](docs/lending.md) | `lending` | composed stages, KYC, bureau quorum, approval, disbursement, spawn |
 | [Trading](docs/trading.md) | `trading` | scheduled rebalance, drift, risk, approval, order identity, reconciliation |
-| [Nine methods](docs/primitives.md) | `primitives` | `call`, `rpc`, `spawn`, `join`, `sleep`, `wait`, `gate`, `emit`, `cancel` |
+| [Compact App surface](docs/primitives.md) | `primitives` | direct calls, remote calls, child workflows, gather/race/quorum, sleep, signal, approval, event, cancel |
 
 Use `python -m <package>.<command> --help` for command options. All examples read:
 
@@ -72,7 +84,8 @@ Use `python -m <package>.<command> --help` for command options. All examples rea
 
 ## External effects and retries
 
-Ogha guarantees durable progress. It cannot atomically combine its PostgreSQL commit with an
+Ogha guarantees durable progress. A committed durable call result is reused during replay. It
+cannot atomically combine its PostgreSQL commit with an
 unrelated payment, email, treasury, or broker API. If a worker loses the response after the
 provider accepted a request, that step can run again. Every effectful mock in this repository
 therefore accepts a stable business idempotency key and returns the original result on retry.

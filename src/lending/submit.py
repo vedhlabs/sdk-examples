@@ -2,8 +2,8 @@ import argparse
 import json
 import uuid
 
-from example_support.config import decode_output
-from lending.client import connect
+from lending.app import app
+from lending.workflows import application
 
 
 def main() -> None:
@@ -22,19 +22,11 @@ def main() -> None:
         },
         "amount": args.amount,
     }
-    client = connect()
-    run = client.submit(
-        "lending.application",
-        json.dumps(request).encode(),
-        run_id=application_id,
-        target="python://lending",
-    )
-    print(run.run_id)
+    run = app.start(application.options(run_id=application_id), request)
+    print(run.id)
     if args.wait:
-        terminal = client.result(run.run_id, timeout_s=30)
-        print(json.dumps(decode_output(terminal.output), indent=2, sort_keys=True))
+        print(json.dumps(run.result(timeout=30), indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":
     main()
-

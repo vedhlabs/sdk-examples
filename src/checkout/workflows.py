@@ -1,9 +1,10 @@
 import ogha
 
 from checkout.adapters import payments, shipping
+from checkout.app import app
 
 
-@ogha.step(
+@app.step(
     retry=ogha.RetryPolicy(max_attempts=5),
     timeout=30,
     pivot=True,
@@ -16,15 +17,15 @@ def charge_order(order: dict) -> dict:
     )
 
 
-@ogha.step(retry=ogha.RetryPolicy(max_attempts=5), timeout=30)
+@app.step(retry=ogha.RetryPolicy(max_attempts=5), timeout=30)
 def create_shipment(order: dict) -> dict:
     return shipping.create(order=order, idempotency_key=f"order:{order['id']}:shipment")
 
 
-@ogha.workflow(name="checkout", version="1", target="python://checkout")
-async def checkout(ctx, order: dict) -> dict:
-    charge = await ctx.call(charge_order, order)
-    shipment = await ctx.call(create_shipment, order)
+@app.workflow(name="checkout", version="1")
+async def checkout(order: dict) -> dict:
+    charge = await charge_order(order)
+    shipment = await create_shipment(order)
     return {
         "order_id": order["id"],
         "charge_id": charge["id"],

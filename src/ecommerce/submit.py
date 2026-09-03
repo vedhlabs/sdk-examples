@@ -1,8 +1,8 @@
 import argparse
-import json
 import uuid
 
-from ecommerce.client import connect
+from ecommerce.app import app
+from ecommerce.workflow import checkout
 
 
 def main() -> None:
@@ -16,15 +16,9 @@ def main() -> None:
         "email": "buyer@example.com",
         "items": [{"sku": "widget", "price": args.amount, "qty": 1}],
     }
-    run = connect().submit(
-        "ecommerce.checkout",
-        json.dumps(order).encode(),
-        run_id=order["id"],
-        target="python://ecommerce",
-    )
-    print(run.run_id)
+    run = app.start(checkout.options(run_id=order["id"]), order)
+    print(run.id)
 
 
 if __name__ == "__main__":
     main()
-

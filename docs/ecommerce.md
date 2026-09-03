@@ -1,7 +1,7 @@
 # Ecommerce order workflow
 
 This is the complete order use case from the docs: parallel carrier quotes, a first-two quorum, a
-fraud gate, payment, shipment, an asynchronous carrier callback, and a later follow-up.
+fraud approval, payment, shipment, an asynchronous carrier signal, and a later follow-up.
 
 ## Run a normal order
 
@@ -26,7 +26,7 @@ python -m ecommerce.webhooks ship "$RUN_ID"
 ```
 
 To exercise the denial branch, replace `approve` with `deny`. If no decision arrives within the
-gate timeout, the gate rejects; the workflow catches `PermissionDenied` and returns a visible
+approval timeout, the approval rejects; the workflow catches `PermissionDenied` and returns a visible
 business rejection.
 
 ## What happens
@@ -40,7 +40,7 @@ flowchart TD
     Q2 --> Q
     Q3 --> Q
     Q --> G{total over 5000?}
-    G -->|yes| H[fraud gate]
+    G -->|yes| H[fraud approval]
     G -->|no| R[reserve stock]
     H --> R
     R --> P[charge with stable key]
@@ -53,7 +53,8 @@ flowchart TD
 
 The quote fan-out is genuinely distributed because the workflow declares
 `execution="async_distributed"`. After two replies, `Handle.settled` identifies the unfinished
-call locally and `ctx.cancel` rejects it.
+call locally and `ogha.cancel` rejects it. Calls are eager, so all three durable promises exist
+before the workflow awaits the quorum.
 
 ## Source map
 
@@ -66,4 +67,3 @@ call locally and `ctx.cancel` rejects it.
 
 The local payment, inventory, shipping, and mail adapters persist results in SQLite by business
 idempotency key. They model the contract expected from real providers; they are not Ogha storage.
-

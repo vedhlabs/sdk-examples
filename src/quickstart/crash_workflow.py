@@ -5,14 +5,15 @@ from pathlib import Path
 import ogha
 
 from quickstart.adapters import inventory
+from quickstart.app import app
 
 
-@ogha.step(retry=ogha.RetryPolicy(max_attempts=5), timeout=20)
+@app.step(retry=ogha.RetryPolicy(max_attempts=5), timeout=20)
 def reserve_for_crash_demo(order: dict) -> dict:
     return inventory.reserve(order, idempotency_key=f"order:{order['id']}:crash-demo")
 
 
-@ogha.step(retry=ogha.RetryPolicy(max_attempts=5), timeout=30)
+@app.step(retry=ogha.RetryPolicy(max_attempts=5), timeout=30)
 def fulfill_slowly(order: dict) -> dict:
     """Leave visible evidence around a hard kill.
 
@@ -31,9 +32,8 @@ def fulfill_slowly(order: dict) -> dict:
     return {"order_id": order["id"], "fulfilled": True}
 
 
-@ogha.workflow(name="quickstart.crash-recovery", target="python://quickstart")
-async def crash_recovery(ctx, order: dict) -> dict:
-    reservation = await ctx.call(reserve_for_crash_demo, order)
-    fulfillment = await ctx.call(fulfill_slowly, order)
+@app.workflow(name="quickstart.crash-recovery")
+async def crash_recovery(order: dict) -> dict:
+    reservation = await reserve_for_crash_demo(order)
+    fulfillment = await fulfill_slowly(order)
     return {**fulfillment, "reservation_id": reservation["reservation_id"]}
-

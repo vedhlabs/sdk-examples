@@ -37,7 +37,7 @@ flowchart LR
     B2 --> Q
     B3 --> Q
     Q --> D[decision]
-    D --> G{manual gate?}
+    D --> G{manual approval?}
     G --> R[reserve funds]
     R --> X[disburse pivot]
 ```
@@ -61,7 +61,7 @@ duplicating its logic.
 }
 ```
 
-It spawns one `lending.statement` run per borrower. The accounting period is input data; the
+It eagerly starts one explicitly detached `lending.statement` run per borrower. The accounting period is input data; the
 workflow never reads the wall clock, so replay remains deterministic.
 
 ## Source map
@@ -71,4 +71,3 @@ workflow never reads the wall clock, so replay remains deterministic.
 - Reusable stage composition: [`src/lending/stages.py`](../src/lending/stages.py)
 - Six workflows: [`src/lending/workflows.py`](../src/lending/workflows.py)
 - Worker, submitter, reviewer: [`src/lending`](../src/lending)
-

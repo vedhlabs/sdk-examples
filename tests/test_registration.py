@@ -1,13 +1,20 @@
 import ogha
 
+from checkout.app import app as checkout_app
 from checkout.workflows import charge_order, create_shipment
 from checkout.workflows import checkout as compact_checkout
+from ecommerce.app import app as ecommerce_app
 from ecommerce.workflow import checkout as ecommerce_checkout
+from lending.app import app as lending_app
 from lending.workflows import application, month_end, statement
+from primitives.app import app as primitives_app
 from primitives.methods import methods_tour, risk_score
+from quickstart.app import app as quickstart_app
 from quickstart.schedules import daily_report
 from quickstart.workflows import checkout as quickstart_checkout
+from reports.app import app as reports_app
 from reports.workflows import reports_daily
+from trading.app import app as trading_app
 from trading.workflows import rebalance_day, trading_rebalance
 
 
@@ -28,6 +35,21 @@ def test_documented_workflow_names_and_targets_are_registered():
         spec = function.__ogha_spec__
         assert spec.name == name
         assert spec.target == target
+
+
+def test_every_example_is_owned_by_one_isolated_app():
+    apps = {
+        quickstart_app: {"quickstart.checkout", "quickstart.daily-report"},
+        checkout_app: {"checkout"},
+        reports_app: {"reports.daily"},
+        ecommerce_app: {"ecommerce.checkout"},
+        lending_app: {"lending.application", "lending.statement", "lending.month_end"},
+        trading_app: {"trading.rebalance", "trading.rebalance-day"},
+        primitives_app: {"primitives.tour", "primitives.child"},
+    }
+    for app, expected in apps.items():
+        assert expected <= set(app._workflows)
+        assert app.worker()._workflows is app._workflows
 
 
 def test_fanout_workflows_are_distributed():

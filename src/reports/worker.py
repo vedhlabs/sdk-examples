@@ -1,13 +1,10 @@
-import ogha
-
-from example_support.config import connect
 from reports import workflows  # noqa: F401
+from reports.app import app
 
 
 def main() -> None:
-    ogha.Worker(connect("reports-dev"), target="python://reports", service="reports").run()
+    app.serve()
 
 
 if __name__ == "__main__":
     main()
-

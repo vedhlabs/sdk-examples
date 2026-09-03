@@ -1,6 +1,6 @@
-from example_support.config import connect as _connect
+from quickstart.app import app
 
 
 def connect():
-    return _connect("quickstart-dev")
-
+    """Operator-only access to the connection owned by the Quickstart App."""
+    return app.client

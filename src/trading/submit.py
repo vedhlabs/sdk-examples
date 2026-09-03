@@ -1,8 +1,8 @@
 import argparse
-import json
 from datetime import date
 
-from trading.client import connect
+from trading.app import app
+from trading.workflows import trading_rebalance
 
 
 def main() -> None:
@@ -12,15 +12,12 @@ def main() -> None:
     args = parser.parse_args()
 
     run_id = f"{args.date}-{args.portfolio}"
-    run = connect().submit(
-        "trading.rebalance",
-        json.dumps({"portfolio": args.portfolio, "run_id": run_id}).encode(),
-        run_id=run_id,
-        target="python://trading",
+    run = app.start(
+        trading_rebalance.options(run_id=run_id),
+        {"portfolio": args.portfolio, "run_id": run_id},
     )
-    print(run.run_id)
+    print(run.id)
 
 
 if __name__ == "__main__":
     main()
-

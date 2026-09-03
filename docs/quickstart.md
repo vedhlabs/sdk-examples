@@ -8,7 +8,7 @@ schedule that belongs to the engine rather than the worker.
 
 ```mermaid
 sequenceDiagram
-    participant S as submit.py
+    participant S as app.start
     participant E as Ogha engine
     participant W as worker.py
     participant P as local provider
@@ -20,7 +20,9 @@ sequenceDiagram
     E-->>S: terminal run
 ```
 
-The engine remembers workflow progress. The provider remembers effect identity. Both are needed:
+Ogha persists every identified call as a promise. Recovery replays the workflow and returns an
+already committed value at each matching call instead of repeating it. The provider remembers
+effect identity. Both are needed:
 the engine cannot know whether a remote payment committed when a worker disappeared before
 receiving its response.
 
@@ -46,42 +48,37 @@ Ogha has two worker-placement modes: `async_sticky` and `async_distributed`. Syn
 an independent client choice, not a third mode. The workflow declares its real placement:
 
 ```python
-@ogha.workflow(
+from quickstart.app import app
+
+@app.workflow(
     name="quickstart.checkout",
     execution="async_sticky",
-    target="python://quickstart",
 )
-async def checkout(ctx, order):
-    validated = await ctx.call(validate_order, order)
+async def checkout(order):
+    validated = await validate_order(order)
     return {"order_id": order["id"], "total": validated["total"]}
 ```
 
 The dedicated client then chooses to wait:
 
 ```python
-terminal = client.execute(
-    "quickstart.checkout",
-    json.dumps(order).encode(),
-    run_id=order["id"],
-    target="python://quickstart",
-    wait_timeout_s=30,
-)
+run = app.start(checkout.options(run_id=order["id"]), order)
+result = run.result(timeout=30)
 ```
 
-`execute` submits the run and waits for that same run to become terminal. Internally it uses the
-same durable submission and status polling as `submit` followed by `result`; it is a convenience,
-not a different server operation. If the waiting process is killed, the engine and worker continue
-because neither the run nor its lease belongs to the client connection.
+`app.start` submits and returns an eager `RunHandle`; `result` waits for that same run to become
+terminal and restores the workflow's declared Python result type. If the waiting process is killed,
+the engine and worker continue because neither the run nor its lease belongs to the caller connection.
 
 ```mermaid
 sequenceDiagram
     participant C as sync_client.py
     participant E as Ogha engine
     participant W as async-sticky worker
-    C->>E: execute: submit(run_id)
+    C->>E: app.start(run_id)
     E-->>C: accepted run
     E->>W: execute root task
-    loop execute polls status
+    loop RunHandle.result polls status
         C->>E: status(run_id)
         E-->>C: running
     end
@@ -121,16 +118,12 @@ Canonical files:
 ```bash
 python - <<'PY'
 import json, uuid
-from quickstart.client import connect
+from quickstart.app import app
+from quickstart.crash_workflow import crash_recovery
 
 run_id = f"crash-{uuid.uuid4().hex[:12]}"
 order = {"id": run_id, "items": [{"sku": "demo", "price": 1, "qty": 1}]}
-connect().submit(
-    "quickstart.crash-recovery",
-    json.dumps(order).encode(),
-    run_id=run_id,
-    target="python://quickstart",
-)
+app.start(crash_recovery.options(run_id=run_id), order)
 print(run_id)
 PY
 ```
@@ -159,7 +152,8 @@ converge forward instead of overwriting a newer declaration with an older one.
 ## Common failures
 
 - A run remains pending with no worker: the submit target and worker target differ.
-- A schedule is absent: the module containing `@ogha.scheduled` was never imported by a worker.
+- A schedule is absent: the module containing `@ogha.scheduled` was never imported before
+  `app.serve()` built the worker.
 - An effect appears twice: the external adapter did not implement a stable idempotency key.
 - A workflow changes behavior after restart: it read time, randomness, environment, or network I/O
   in the workflow body instead of a recorded step.

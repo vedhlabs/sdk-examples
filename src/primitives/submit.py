@@ -1,8 +1,8 @@
 import argparse
-import json
 import uuid
 
-from primitives.client import connect
+from primitives.app import app
+from primitives.methods import methods_tour
 
 
 def main() -> None:
@@ -11,15 +11,9 @@ def main() -> None:
     args = parser.parse_args()
     run_id = f"primitive-{uuid.uuid4().hex[:12]}"
     request = {"customer": " Example Customer ", "amount": args.amount}
-    run = connect().submit(
-        "primitives.tour",
-        json.dumps(request).encode(),
-        run_id=run_id,
-        target="python://primitives",
-    )
-    print(run.run_id)
+    run = app.start(methods_tour.options(run_id=run_id), request)
+    print(run.id)
 
 
 if __name__ == "__main__":
     main()
-

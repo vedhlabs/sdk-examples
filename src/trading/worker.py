@@ -1,18 +1,10 @@
-import ogha
-
 from trading import steps, workflows  # noqa: F401
-from trading.client import connect
+from trading.app import app
 
 
 def main() -> None:
-    ogha.Worker(
-        connect(),
-        target="python://trading",
-        concurrency=16,
-        service="trading",
-    ).run()
+    app.serve()
 
 
 if __name__ == "__main__":
     main()
-

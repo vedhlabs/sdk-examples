@@ -1,18 +1,10 @@
-import ogha
-
 from quickstart import crash_workflow, schedules, workflows  # noqa: F401
-from quickstart.client import connect
+from quickstart.app import app
 
 
 def main() -> None:
-    ogha.Worker(
-        connect(),
-        target="python://quickstart",
-        concurrency=8,
-        service="quickstart",
-    ).run()
+    app.serve()
 
 
 if __name__ == "__main__":
     main()
-

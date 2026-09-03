@@ -1,6 +1,6 @@
-from example_support.config import connect as _connect
+from trading.app import app
 
 
 def connect():
-    return _connect("trading-dev")
-
+    """Operator-only access to the connection owned by the Trading App."""
+    return app.client

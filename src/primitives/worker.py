@@ -1,18 +1,10 @@
-import ogha
-
 from primitives import methods  # noqa: F401
-from primitives.client import connect
+from primitives.app import app
 
 
 def main() -> None:
-    ogha.Worker(
-        connect(),
-        target="python://primitives",
-        concurrency=8,
-        service="primitives",
-    ).run()
+    app.serve()
 
 
 if __name__ == "__main__":
     main()
-

@@ -16,5 +16,5 @@ Python lives here. Every real source-file label in the six Ogha pages links to a
 checked after links are updated so a renamed file cannot leave a plausible-looking dead example.
 
 The quickstart’s `sync_client.py` is deliberately classified as a caller example. It uses
-`Client.execute`, the SDK convenience for `submit` followed by `result`, and does not introduce an
+`app.start(...).result()`: waiting is caller behavior and does not introduce an
 `execution="sync"` workflow declaration.

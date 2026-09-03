@@ -1,18 +1,10 @@
-import ogha
-
 from lending import workflows  # noqa: F401
-from lending.client import connect
+from lending.app import app
 
 
 def main() -> None:
-    ogha.Worker(
-        connect(),
-        target="python://lending",
-        concurrency=16,
-        service="lending",
-    ).run()
+    app.serve()
 
 
 if __name__ == "__main__":
     main()
-

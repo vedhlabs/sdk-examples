@@ -1,2 +1,1 @@
-"""Executable tour of Ogha's nine workflow methods."""
-
+"""Executable tour of Ogha's compact App authoring surface."""

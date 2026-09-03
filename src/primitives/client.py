@@ -1,6 +1,6 @@
-from example_support.config import connect as _connect
+from primitives.app import app
 
 
 def connect():
-    return _connect("primitives-dev")
-
+    """Signal-only access to the connection owned by the Primitives App."""
+    return app.client

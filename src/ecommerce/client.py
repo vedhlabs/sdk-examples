@@ -1,6 +1,6 @@
-from example_support.config import connect as _connect
+from ecommerce.app import app
 
 
 def connect():
-    return _connect("ecommerce-dev")
-
+    """Webhook-only access to the connection owned by the Ecommerce App."""
+    return app.client

@@ -1,9 +1,10 @@
 import ogha
 
 from example_support.store import stable_id, store
+from quickstart.app import app
 
 
-@ogha.step(retry=ogha.RetryPolicy(max_attempts=3), timeout=30)
+@app.step(retry=ogha.RetryPolicy(max_attempts=3), timeout=30)
 def build_report(report: str, occurrence: str) -> dict:
     key = f"{report}:{occurrence}"
     return store.once(
@@ -24,9 +25,9 @@ def build_report(report: str, occurrence: str) -> dict:
     overlap=ogha.OVERLAP_SKIP,
     revision=1,
 )
-@ogha.workflow(name="quickstart.daily-report", target="python://quickstart")
-async def daily_report(ctx, request: dict) -> dict:
-    occurrence = ogha.scheduled_time(ctx).isoformat()
-    report = await ctx.call(build_report, request["report"], occurrence)
-    ctx.emit("ReportBuilt", report)
+@app.workflow(name="quickstart.daily-report")
+async def daily_report(request: dict) -> dict:
+    occurrence = ogha.scheduled_time().isoformat()
+    report = await build_report(request["report"], occurrence)
+    ogha.event("ReportBuilt", report)
     return report

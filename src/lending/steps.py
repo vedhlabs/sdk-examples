@@ -2,26 +2,27 @@ import ogha
 
 from example_support.store import stable_id, store
 from lending.adapters import bureaus, compliance, treasury
+from lending.app import app
 
 
-@ogha.step(retry=ogha.RetryPolicy(max_attempts=3), timeout=15)
+@app.step(retry=ogha.RetryPolicy(max_attempts=3), timeout=15)
 def check_identity(applicant: dict) -> dict:
     if not applicant.get("national_id"):
         raise ValueError("national_id is required")
     return compliance.verify_identity(applicant)
 
 
-@ogha.step(retry=ogha.RetryPolicy(max_attempts=2), timeout=15)
+@app.step(retry=ogha.RetryPolicy(max_attempts=2), timeout=15)
 def screen_sanctions(applicant: dict) -> dict:
     return compliance.screen_sanctions(applicant["national_id"])
 
 
-@ogha.step(retry=ogha.RetryPolicy(max_attempts=4), timeout=30)
+@app.step(retry=ogha.RetryPolicy(max_attempts=4), timeout=30)
 def pull_bureau(applicant: dict, bureau: str) -> dict:
     return {"bureau": bureau, "score": bureaus.credit_score(bureau, applicant)}
 
 
-@ogha.step(timeout=15)
+@app.step(timeout=15)
 def decide(applicant: dict, scores: list[dict], amount: int) -> dict:
     average = sum(score["score"] for score in scores) / len(scores)
     limit = 300_000 if average >= 720 else 150_000 if average >= 660 else 0
@@ -35,7 +36,7 @@ def decide(applicant: dict, scores: list[dict], amount: int) -> dict:
     }
 
 
-@ogha.step(
+@app.step(
     retry=ogha.RetryPolicy(max_attempts=3),
     timeout=30,
     compensate_with="release_reserve",
@@ -48,12 +49,12 @@ def reserve_funds(applicant: dict, amount: int) -> dict:
     )
 
 
-@ogha.step
+@app.step
 def release_reserve(reservation: dict) -> dict:
     return treasury.release(reservation["reservation"])
 
 
-@ogha.step(retry=ogha.RetryPolicy(max_attempts=5), pivot=True, timeout=45)
+@app.step(retry=ogha.RetryPolicy(max_attempts=5), pivot=True, timeout=45)
 def disburse(applicant: dict, amount: int) -> dict:
     return treasury.disburse(
         applicant_id=applicant["id"],
@@ -62,7 +63,7 @@ def disburse(applicant: dict, amount: int) -> dict:
     )
 
 
-@ogha.step(retry=ogha.RetryPolicy(max_attempts=3), timeout=30)
+@app.step(retry=ogha.RetryPolicy(max_attempts=3), timeout=30)
 def build_statement(borrower: dict, period: str) -> dict:
     key = f"{borrower['id']}:{period}"
     return store.once(
@@ -74,4 +75,3 @@ def build_statement(borrower: dict, period: str) -> dict:
             "period": period,
         },
     )
-

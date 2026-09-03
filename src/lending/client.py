@@ -1,6 +1,6 @@
-from example_support.config import connect as _connect
+from lending.app import app
 
 
 def connect():
-    return _connect("lending-dev")
-
+    """Approval-only access to the connection owned by the Lending App."""
+    return app.client

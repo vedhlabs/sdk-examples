@@ -16,7 +16,7 @@ RUN_ID=$(python -m trading.submit growth --date 2026-08-25)
 python -m trading.operator approve "$RUN_ID" --reviewer portfolio-manager
 ```
 
-The initial mock book creates turnover above 10%, so the run waits at the review gate. Orders fill
+The initial mock book creates turnover above 10%, so the run waits at `ogha.approval`. Orders fill
 after two status checks and the final positions reconcile to target weights.
 
 ## Execution shape
@@ -28,7 +28,7 @@ flowchart TD
     M --> P[drift and order plan]
     P --> R[pre-trade risk]
     R --> G{turnover over 10%?}
-    G -->|yes| H[PM gate]
+    G -->|yes| H[PM approval]
     G -->|no| S[sells]
     H --> S
     S --> B[buys]
@@ -60,4 +60,3 @@ is an integration demonstration, not investment advice or a production risk syst
 - Workflow and engine schedule: [`src/trading/workflows.py`](../src/trading/workflows.py)
 - Broker contract and local implementation: [`src/trading/adapters`](../src/trading/adapters)
 - Operator boundary: [`src/trading/operator.py`](../src/trading/operator.py)
-

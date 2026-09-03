@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 import sys
@@ -16,14 +15,21 @@ os.environ.setdefault("TRADING_BROKER", "mock")
 
 import ogha  # noqa: E402
 
-from ecommerce.client import connect as ecommerce_connect  # noqa: E402
+from checkout.app import app as checkout_app  # noqa: E402
+from checkout.workflows import checkout as compact_checkout  # noqa: E402
+from ecommerce.app import app as ecommerce_app  # noqa: E402
 from ecommerce.webhooks import carrier_pickup  # noqa: E402
-from example_support.config import connect, decode_output  # noqa: E402
+from ecommerce.workflow import checkout as ecommerce_checkout  # noqa: E402
 from example_support.promises import pending_promise  # noqa: E402
-from lending.client import connect as lending_connect  # noqa: E402
-from primitives.client import connect as primitives_connect  # noqa: E402
+from lending.app import app as lending_app  # noqa: E402
+from lending.workflows import application as lending_application  # noqa: E402
+from primitives.app import app as primitives_app  # noqa: E402
+from primitives.methods import methods_tour  # noqa: E402
+from quickstart.app import app as quickstart_app  # noqa: E402
 from quickstart.sync_client import example_order, run_checkout_sync  # noqa: E402
-from trading.client import connect as trading_connect  # noqa: E402
+from quickstart.workflows import checkout as quickstart_checkout  # noqa: E402
+from trading.app import app as trading_app  # noqa: E402
+from trading.workflows import trading_rebalance  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKERS = (
@@ -37,32 +43,22 @@ WORKERS = (
 )
 
 
-def terminal(client: ogha.Client, run_id: str, timeout_s: float = 45) -> dict:
-    run = client.result(run_id, timeout_s=timeout_s)
-    if run.state is not ogha.RunState.COMPLETED:
-        raise RuntimeError(f"{run_id} ended {run.state.name}: {run.error}")
-    return decode_output(run.output)
+def terminal(run: ogha.RunHandle, timeout_s: float = 45) -> dict:
+    return run.result(timeout=timeout_s)
 
 
-def submit(client: ogha.Client, workflow: str, target: str, value, prefix: str) -> str:
+def submit(app: ogha.App, workflow, value, prefix: str) -> ogha.RunHandle:
     run_id = f"{prefix}-{SMOKE_ID}-{uuid.uuid4().hex[:6]}"
-    client.submit(
-        workflow,
-        json.dumps(value).encode(),
-        run_id=run_id,
-        target=target,
-    )
-    return run_id
+    return app.start(workflow.options(run_id=run_id), value)
 
 
 def run_checks() -> None:
-    base = connect()
+    base = quickstart_app.client
     base.hello()
 
-    quickstart_id = submit(
-        base,
-        "quickstart.checkout",
-        "python://quickstart",
+    quickstart_run = submit(
+        quickstart_app,
+        quickstart_checkout,
         {
             "id": f"QS-{SMOKE_ID}",
             "customer_id": "smoke-customer",
@@ -71,30 +67,27 @@ def run_checks() -> None:
         },
         "quickstart",
     )
-    assert terminal(base, quickstart_id)["total"] == 125
+    assert terminal(quickstart_run)["total"] == 125
 
     sync_run_id, sync_result = run_checkout_sync(
-        base,
         example_order(175, order_id=f"QS-SYNC-{SMOKE_ID}"),
         timeout_s=30,
     )
     assert sync_run_id == f"QS-SYNC-{SMOKE_ID}"
     assert sync_result["total"] == 175
 
-    checkout_id = submit(
-        base,
-        "checkout",
-        "python://checkout",
+    checkout_run = submit(
+        checkout_app,
+        compact_checkout,
         {"id": f"ORDER-{SMOKE_ID}", "customer_id": "smoke", "total": 149},
         "checkout",
     )
-    assert terminal(base, checkout_id)["tracking"]
+    assert terminal(checkout_run)["tracking"]
 
-    ecommerce = ecommerce_connect()
-    ecommerce_id = submit(
-        ecommerce,
-        "ecommerce.checkout",
-        "python://ecommerce",
+    ecommerce = ecommerce_app.client
+    ecommerce_run = submit(
+        ecommerce_app,
+        ecommerce_checkout,
         {
             "id": f"EC-{SMOKE_ID}",
             "customer_id": "smoke",
@@ -103,15 +96,13 @@ def run_checks() -> None:
         },
         "ecommerce",
     )
-    pending_promise(ecommerce, ecommerce_id, "carrier_pickup", timeout_s=20)
-    carrier_pickup(ecommerce_id, {"tracking": "SMOKE-PICKUP"})
-    assert terminal(ecommerce, ecommerce_id)["status"] == "shipped"
+    pending_promise(ecommerce, ecommerce_run.id, "carrier_pickup", timeout_s=20)
+    carrier_pickup(ecommerce_run.id, {"tracking": "SMOKE-PICKUP"})
+    assert terminal(ecommerce_run)["status"] == "shipped"
 
-    lending = lending_connect()
-    lending_id = submit(
-        lending,
-        "lending.application",
-        "python://lending",
+    lending_run = submit(
+        lending_app,
+        lending_application,
         {
             "applicant": {
                 "id": f"LOAN-{SMOKE_ID}",
@@ -122,33 +113,31 @@ def run_checks() -> None:
         },
         "lending",
     )
-    assert terminal(lending, lending_id)["status"] == "disbursed"
+    assert terminal(lending_run)["status"] == "disbursed"
 
-    primitives = primitives_connect()
-    primitives_id = submit(
-        primitives,
-        "primitives.tour",
-        "python://primitives",
+    primitives = primitives_app.client
+    primitives_run = submit(
+        primitives_app,
+        methods_tour,
         {"customer": " Smoke Customer ", "amount": 250},
         "primitives",
     )
-    signal = pending_promise(primitives, primitives_id, "external_signal", timeout_s=20)
-    primitives.resolve(signal.id, json.dumps({"message": "smoke signal"}).encode())
-    gate = pending_promise(primitives, primitives_id, "manual_approval", timeout_s=20)
-    primitives.resolve(gate.id, json.dumps({"approved": True, "reviewer": "smoke"}).encode())
-    assert terminal(primitives, primitives_id)["risk"]["band"] == "low"
+    signal = pending_promise(primitives, primitives_run.id, "external_signal", timeout_s=20)
+    primitives.resolve(signal.id, b'{"message":"smoke signal"}')
+    gate = pending_promise(primitives, primitives_run.id, "manual_approval", timeout_s=20)
+    primitives.resolve(gate.id, b'{"approved":true,"reviewer":"smoke"}')
+    assert terminal(primitives_run)["risk"]["band"] == "low"
 
-    trading = trading_connect()
-    trading_id = submit(
-        trading,
-        "trading.rebalance",
-        "python://trading",
+    trading = trading_app.client
+    trading_run = submit(
+        trading_app,
+        trading_rebalance,
         {"portfolio": "growth", "run_id": f"trade-{SMOKE_ID}"},
         "trading",
     )
-    gate = pending_promise(trading, trading_id, "rebalance_approval", timeout_s=20)
-    trading.resolve(gate.id, json.dumps({"approved": True, "reviewer": "smoke"}).encode())
-    trading_result = terminal(trading, trading_id, timeout_s=60)
+    gate = pending_promise(trading, trading_run.id, "rebalance_approval", timeout_s=20)
+    trading.resolve(gate.id, b'{"approved":true,"reviewer":"smoke"}')
+    trading_result = terminal(trading_run, timeout_s=60)
     assert trading_result["status"] == "completed"
     assert trading_result["reconciliation"]["within_band"] is True
 

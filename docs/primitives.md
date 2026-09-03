@@ -1,17 +1,18 @@
-# The nine methods, running together
+# The compact App surface, running together
 
-`primitives.tour` deliberately uses the complete workflow surface in one short run.
+`primitives.tour` deliberately exercises the ordinary context-free workflow surface in one short
+run. The compatibility `Context` still exists internally, but application code does not pass it.
 
 | Method | Line of business meaning in this tour |
 | :--- | :--- |
-| `call` | normalize input and request provider quotes |
-| `rpc` | invoke `risk.score` by service and method name |
-| `spawn` | start an independently visible child record run |
-| `join` | race quotes and await the child |
+| `step(...)` | normalize input and request provider quotes as direct typed calls |
+| `remote(...)` | invoke `risk.score` across a service boundary |
+| `child_workflow(...)` | eagerly start an independently visible child run |
+| `gather` / `race` / `quorum` | await all, the first, or a threshold of handles |
 | `sleep` | park for one second without a worker |
-| `wait` | await an external system callback |
-| `gate` | require an operator decision that denies on silence |
-| `emit` | write a milestone to the run timeline |
+| `signal` | await an external system callback |
+| `approval` | require an operator decision that denies on silence |
+| `event` | write a milestone to the run timeline |
 | `cancel` | stop the quote that lost the race |
 
 ## Run it
@@ -26,9 +27,9 @@ python -m primitives.operator signal "$RUN_ID"
 python -m primitives.operator approve "$RUN_ID"
 ```
 
-The worker's `service="primitives"` makes it listen on both `python://primitives` and
-`rpc://primitives`. The RPC payload names `risk.score`, which is an ordinary `@ogha.step`
-registered in that serving process.
+The App name `primitives` makes its worker listen on both `python://primitives` and
+`rpc://primitives`. The typed `@app.remote("primitives", name="risk.score")` declaration routes to
+the ordinary `@app.step(name="risk.score")` registered in that serving process.
 
 ```mermaid
 sequenceDiagram
@@ -47,4 +48,3 @@ sequenceDiagram
 ```
 
 Canonical source: [`src/primitives/methods.py`](../src/primitives/methods.py).
-

@@ -5,10 +5,8 @@ import json
 import uuid
 from typing import Any
 
-import ogha
-
-from example_support.config import decode_output
-from quickstart.client import connect
+from quickstart.app import app
+from quickstart.workflows import checkout
 
 
 def example_order(amount: int, *, order_id: str | None = None) -> dict[str, Any]:
@@ -22,7 +20,6 @@ def example_order(amount: int, *, order_id: str | None = None) -> dict[str, Any]
 
 
 def run_checkout_sync(
-    client: ogha.Client,
     order: dict[str, Any],
     *,
     timeout_s: float = 30,
@@ -35,22 +32,11 @@ def run_checkout_sync(
     async-sticky or async-distributed placement, and the run survives if this
     caller disconnects.
     """
-    terminal = client.execute(
-        "quickstart.checkout",
-        json.dumps(order).encode(),
-        run_id=str(order["id"]),
-        target="python://quickstart",
-        wait_timeout_s=timeout_s,
-        poll_s=poll_s,
-    )
-    if terminal.state is not ogha.RunState.COMPLETED:
-        detail = f": {terminal.error}" if terminal.error else ""
-        raise RuntimeError(f"run {terminal.run_id} ended {terminal.state.name}{detail}")
-
-    output = decode_output(terminal.output)
+    run = app.start(checkout.options(run_id=str(order["id"])), order)
+    output = run.result(timeout=timeout_s, poll=poll_s)
     if not isinstance(output, dict):
-        raise RuntimeError(f"run {terminal.run_id} returned a non-object result")
-    return terminal.run_id, output
+        raise RuntimeError(f"run {run.id} returned a non-object result")
+    return run.id, output
 
 
 def main() -> None:
@@ -62,7 +48,7 @@ def main() -> None:
     args = parser.parse_args()
 
     order = example_order(args.amount)
-    run_id, output = run_checkout_sync(connect(), order, timeout_s=args.timeout)
+    run_id, output = run_checkout_sync(order, timeout_s=args.timeout)
     print(f"completed {run_id}")
     print(json.dumps(output, indent=2, sort_keys=True))
 
