@@ -19,17 +19,21 @@ import ogha  # noqa: E402
 from checkout.app import app as checkout_app  # noqa: E402
 from checkout.workflows import checkout as compact_checkout  # noqa: E402
 from ecommerce.app import app as ecommerce_app  # noqa: E402
+from ecommerce.client import connect as connect_ecommerce  # noqa: E402
 from ecommerce.webhooks import carrier_pickup  # noqa: E402
 from ecommerce.workflow import checkout as ecommerce_checkout  # noqa: E402
 from example_support.promises import pending_promise  # noqa: E402
 from lending.app import app as lending_app  # noqa: E402
 from lending.workflows import application as lending_application  # noqa: E402
 from primitives.app import app as primitives_app  # noqa: E402
+from primitives.client import connect as connect_primitives  # noqa: E402
 from primitives.methods import methods_tour  # noqa: E402
 from quickstart.app import app as quickstart_app  # noqa: E402
+from quickstart.client import connect as connect_quickstart  # noqa: E402
 from quickstart.sync_client import example_order, run_checkout_sync  # noqa: E402
 from quickstart.workflows import checkout as quickstart_checkout  # noqa: E402
 from trading.app import app as trading_app  # noqa: E402
+from trading.client import connect as connect_trading  # noqa: E402
 from trading.workflows import trading_rebalance  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,19 +48,19 @@ WORKERS = (
 )
 
 
-def terminal(run: ogha.RunHandle[Any], timeout_s: float = 45) -> Any:
+def terminal(run: ogha.Handle[Any], timeout_s: float = 45) -> Any:
     return run.result(timeout=timeout_s)
 
 
 def submit(
     app: ogha.App, workflow: Any, value: Any, prefix: str
-) -> ogha.RunHandle[Any]:
+) -> ogha.Handle[Any]:
     run_id = f"{prefix}-{SMOKE_ID}-{uuid.uuid4().hex[:6]}"
-    return workflow.options(run_id=run_id).start(value)
+    return app.start(workflow.options(run_id=run_id), value)
 
 
 def run_checks() -> None:
-    base = quickstart_app.client
+    base = connect_quickstart()
     base.hello()
 
     quickstart_run = submit(
@@ -86,7 +90,7 @@ def run_checks() -> None:
     )
     assert terminal(checkout_run)["tracking"]
 
-    ecommerce = ecommerce_app.client
+    ecommerce = connect_ecommerce()
     ecommerce_run = submit(
         ecommerce_app,
         ecommerce_checkout,
@@ -117,7 +121,7 @@ def run_checks() -> None:
     )
     assert terminal(lending_run)["status"] == "disbursed"
 
-    primitives = primitives_app.client
+    primitives = connect_primitives()
     primitives_run = submit(
         primitives_app,
         methods_tour,
@@ -130,7 +134,7 @@ def run_checks() -> None:
     primitives.resolve(gate.id, b'{"approved":true,"reviewer":"smoke"}')
     assert terminal(primitives_run)["risk"]["band"] == "low"
 
-    trading = trading_app.client
+    trading = connect_trading()
     trading_run = submit(
         trading_app,
         trading_rebalance,

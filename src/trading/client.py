@@ -1,6 +1,6 @@
-from trading.app import app
+from example_support.config import connect as connect_client
 
 
 def connect():
-    """Operator-only access to the connection owned by the Trading App."""
-    return app.client
+    """Create low-level transport access for the trading operator boundary."""
+    return connect_client("trading-dev")

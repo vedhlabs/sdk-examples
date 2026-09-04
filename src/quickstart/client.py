@@ -1,6 +1,6 @@
-from quickstart.app import app
+from example_support.config import connect as connect_client
 
 
 def connect():
-    """Operator-only access to the connection owned by the Quickstart App."""
-    return app.client
+    """Create low-level transport access for the schedule operator boundary."""
+    return connect_client("quickstart-dev")

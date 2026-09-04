@@ -61,8 +61,8 @@ duplicating its logic.
 }
 ```
 
-It calls `statement.options(detached=True).spawn(...)` once per borrower. The accounting period is input data; the
-workflow never reads the wall clock, so replay remains deterministic.
+It calls `app.start(statement.options(detached=True), ...)` once per borrower. The accounting period
+is input data; the workflow never reads the wall clock, so replay remains deterministic.
 
 ## Source map
 

@@ -16,6 +16,6 @@ Python lives here. Every real source-file label in the six Ogha pages links to a
 checked after links are updated so a renamed file cannot leave a plausible-looking dead example.
 
 The quickstart’s `sync_client.py` is deliberately classified as a caller example. It uses
-`workflow.options(...).start(...).result()`: waiting is caller behavior and does not introduce an
-`execution="sync"` workflow declaration. The asynchronous client uses `start(...)` and receives a
-`RunHandle` immediately.
+`app.start(workflow.options(...), ...).result()`: waiting is caller behavior and does not introduce
+an `execution="sync"` workflow declaration. The asynchronous client uses the same `app.start(...)`
+operation and receives a `Handle` immediately.

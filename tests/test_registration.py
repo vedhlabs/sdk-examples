@@ -48,8 +48,8 @@ def test_every_example_is_owned_by_one_isolated_app():
         primitives_app: {"primitives.tour", "primitives.child"},
     }
     for app, expected in apps.items():
-        assert expected <= set(app._workflows)
-        assert app.worker()._workflows is app._workflows
+        assert expected <= set(app._catalog.workflows)
+        assert all(spec.target == app.target for spec in app._catalog.workflows.values())
 
 
 def test_fanout_workflows_are_distributed():

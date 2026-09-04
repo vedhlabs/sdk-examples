@@ -8,7 +8,7 @@ schedule that belongs to the engine rather than the worker.
 
 ```mermaid
 sequenceDiagram
-    participant S as workflow.start
+    participant S as app.start
     participant E as Ogha engine
     participant W as worker.py
     participant P as local provider
@@ -62,22 +62,22 @@ async def checkout(order):
 The dedicated client starts the Run and waits on its Handle:
 
 ```python
-result = checkout.options(run_id=order["id"]).start(order).result()
+result = app.start(checkout.options(run_id=order["id"]), order).result()
 ```
 
-`Workflow.start` submits once; `RunHandle.result` waits for the terminal record and restores the workflow's
+`App.start` submits once; `Handle.result` waits for the terminal record and restores the workflow's
 declared Python result type. If the waiting process is killed, the engine and worker continue because
-neither the run nor its lease belongs to the caller connection. Use `Workflow.start` when the caller
-should return immediately with an eager `RunHandle`.
+neither the Run nor its lease belongs to the caller connection. Omit `.result()` when the caller should
+return immediately with the eager `Handle`.
 
 ```mermaid
 sequenceDiagram
     participant C as sync_client.py
     participant E as Ogha engine
     participant W as default async worker
-    C->>E: checkout.start(run_id)
+    C->>E: app.start(checkout, run_id)
     E->>W: execute root task
-    loop RunHandle.result polls status
+    loop Handle.result polls status
         C->>E: status(run_id)
         E-->>C: running
     end
@@ -94,7 +94,7 @@ python -m quickstart.sync_client  # waits and prints the decoded result
 python -m quickstart.submit --wait  # compact equivalent of the second command
 ```
 
-The SDK checks the terminal record observed by `RunHandle.result`. A failed or canceled workflow becomes
+The SDK checks the terminal record observed by `Handle.result`. A failed or canceled workflow becomes
 an application error instead of being mistaken for a successful empty response. Caller interruption
 does not cancel the durable run.
 
@@ -122,7 +122,7 @@ from quickstart.crash_workflow import crash_recovery
 
 run_id = f"crash-{uuid.uuid4().hex[:12]}"
 order = {"id": run_id, "items": [{"sku": "demo", "price": 1, "qty": 1}]}
-crash_recovery.options(run_id=run_id).start(order)
+app.start(crash_recovery.options(run_id=run_id), order)
 print(run_id)
 PY
 ```

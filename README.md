@@ -32,7 +32,8 @@ python -m quickstart.sync_client
 ```
 
 The `quickstart.app` object owns registration, the engine connection, and the worker lifecycle.
-The synchronous caller uses `checkout.options(run_id=order["id"]).start(order).result()` and
+The synchronous caller uses
+`app.start(checkout.options(run_id=order["id"]), order).result()` and
 receives an ordinary Python value. The run still executes durably in the worker and survives if
 the caller disconnects.
 
@@ -54,9 +55,9 @@ These are three user experiences over two independent choices:
 
 | Experience | Example | What changes |
 | :--- | :--- | :--- |
-| **Sync** | `checkout.options(run_id=order["id"]).start(order).result()` | The caller waits for the typed result. |
-| **Async** | `checkout.options(run_id=order["id"]).start(order)` | The caller receives a durable `RunHandle` immediately; placement defaults to sticky. |
-| **Async Distributed** | `distributed_checkout.options(run_id=order["id"]).start(order)` | The caller receives a `RunHandle`; the workflow declares `execution="async_distributed"`, so steps dispatch independently. |
+| **Sync** | `app.start(checkout.options(run_id=order["id"]), order).result()` | The caller waits for the typed result. |
+| **Async** | `app.start(checkout.options(run_id=order["id"]), order)` | The caller receives a durable `Handle` immediately; `execution="async"` uses sticky placement. |
+| **Async Distributed** | `app.start(distributed_checkout.options(run_id=order["id"]), order)` | The caller receives a `Handle`; `execution="async_distributed"` lets steps dispatch independently. |
 
 Try the first two against the same quickstart workflow:
 
@@ -76,6 +77,11 @@ the caller waits. Public workflow placement is `async` (the sticky default) or
 `async_distributed`; there is no `execution="sync"` workflow mode. Ecommerce, lending,
 primitives, and trading demonstrate distributed placement.
 
+`app.start(workflow, ...)` is also the only way to create a child Run inside a workflow. The App
+uses the active execution scope to distinguish a root from an owned child; an unfinished owned
+child is joined automatically. Use immutable `workflow.options(detached=True)` only when that
+child must outlive its parent.
+
 > **Breaking SDK candidate.** These examples target the unpublished Python 0.4 candidate. It removes
 > 0.3 aliases such as bare decorators, `.run()`, direct child Workflow calls, `.detach()`,
 > `gather/race/quorum`, `approval()`, and `scheduled_time()`. Install the sibling SDK checkout as
@@ -88,7 +94,7 @@ primitives, and trading demonstrate distributed placement.
 | [Quickstart](docs/quickstart.md)          | `quickstart`          | sync waiting, async submit, workflow placement, crash recovery, schedules                               |
 | [Checkout and reports](docs/checkout.md)  | `checkout`, `reports` | provider idempotency, compensation shape, engine cron                                                   |
 | [Order workflow](docs/ecommerce.md)       | `ecommerce`           | fan-out, quorum, cancel, approval, webhook signal, sleep, event                                         |
-| [Lending](docs/lending.md)                | `lending`             | composed stages, KYC, bureau quorum, approval, disbursement, spawn                                      |
+| [Lending](docs/lending.md)                | `lending`             | composed stages, KYC, bureau quorum, approval, disbursement, detached child Runs                         |
 | [Trading](docs/trading.md)                | `trading`             | scheduled rebalance, drift, risk, approval, order identity, reconciliation                              |
 | [Compact App surface](docs/primitives.md) | `primitives`          | direct calls, remote calls, child workflows, join, sleep, signal, approval policy, event, cancel         |
 

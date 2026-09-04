@@ -1,6 +1,7 @@
 import argparse
 import uuid
 
+from ecommerce.app import app
 from ecommerce.workflow import checkout
 
 
@@ -15,7 +16,7 @@ def main() -> None:
         "email": "buyer@example.com",
         "items": [{"sku": "widget", "price": args.amount, "qty": 1}],
     }
-    run = checkout.options(run_id=order["id"]).start(order)
+    run = app.start(checkout.options(run_id=order["id"]), order)
     print(run.id)
 
 

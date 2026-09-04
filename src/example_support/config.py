@@ -9,7 +9,7 @@ from ogha.client import Client
 
 
 def connect(default_namespace: str = "default") -> Client:
-    """Build the client an App owns, or an operator boundary borrows."""
+    """Build the raw client used only at an operator or App-support boundary."""
     return Client(
         os.getenv("OGHA_URL", "http://localhost:8080"),
         tenant=os.getenv("OGHA_TENANT", "default"),
@@ -27,7 +27,7 @@ def create_app(
     """Create one owner for registration, connection, and worker lifecycle."""
     return ogha.App(
         name,
-        client=connect(default_namespace),
+        namespace=os.getenv("OGHA_NAMESPACE", default_namespace),
         concurrency=concurrency,
         lease_ttl_ms=lease_ttl_ms,
     )

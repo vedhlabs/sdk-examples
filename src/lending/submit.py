@@ -2,6 +2,7 @@ import argparse
 import json
 import uuid
 
+from lending.app import app
 from lending.workflows import application
 
 
@@ -21,7 +22,7 @@ def main() -> None:
         },
         "amount": args.amount,
     }
-    run = application.options(run_id=application_id).start(request)
+    run = app.start(application.options(run_id=application_id), request)
     print(run.id)
     if args.wait:
         print(json.dumps(run.result(timeout=30), indent=2, sort_keys=True))

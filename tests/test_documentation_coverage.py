@@ -36,3 +36,16 @@ def test_runnable_python_has_no_empty_function_bodies():
                     and statement.value.value is Ellipsis
                     for statement in node.body
                 ), path
+
+
+def test_examples_do_not_restore_removed_workflow_run_apis():
+    paths = [ROOT / "README.md"]
+    paths.extend((ROOT / "docs").rglob("*.md"))
+    paths.extend((ROOT / "src").rglob("*.py"))
+    paths.extend((ROOT / "scripts").rglob("*.py"))
+
+    for path in paths:
+        text = path.read_text()
+        assert "RunHandle" not in text, path
+        assert "Workflow.start" not in text, path
+        assert ".spawn(" not in text, path

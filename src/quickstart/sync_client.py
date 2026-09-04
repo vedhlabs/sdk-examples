@@ -5,6 +5,7 @@ import json
 import uuid
 from typing import Any
 
+from quickstart.app import app
 from quickstart.workflows import checkout
 
 
@@ -29,7 +30,7 @@ def run_checkout_sync(
     caller disconnects.
     """
     configured = checkout.options(run_id=str(order["id"]))
-    output = configured.start(order).result()
+    output = app.start(configured, order).result()
     if not isinstance(output, dict):
         raise RuntimeError(f"run {order['id']} returned a non-object result")
     return str(order["id"]), output

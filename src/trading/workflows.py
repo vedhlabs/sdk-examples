@@ -145,10 +145,11 @@ async def rebalance_day(request: dict) -> dict:
     assert scheduled_time is not None
     trade_date = scheduled_time.date().isoformat()
     children = [
-        trading_rebalance.options(
-            run_id=f"{trade_date}-{portfolio}",
-            detached=True,
-        ).spawn(
+        app.start(
+            trading_rebalance.options(
+                run_id=f"{trade_date}-{portfolio}",
+                detached=True,
+            ),
             {"portfolio": portfolio, "run_id": f"{trade_date}-{portfolio}"},
         )
         for portfolio in request["portfolios"]

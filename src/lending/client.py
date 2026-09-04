@@ -1,6 +1,6 @@
-from lending.app import app
+from example_support.config import connect as connect_client
 
 
 def connect():
-    """Approval-only access to the connection owned by the Lending App."""
-    return app.client
+    """Create low-level transport access for the approval operator boundary."""
+    return connect_client("lending-dev")

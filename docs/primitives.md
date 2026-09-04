@@ -7,7 +7,7 @@ Application code uses durable function objects and control helpers directly.
 | :--- | :--- |
 | `step(...)` | normalize input and request provider quotes as direct typed calls |
 | `remote(...)` | invoke `risk.score` across a service boundary |
-| `child_workflow.spawn(...)` | eagerly start an owned child run |
+| `app.start(child_workflow, ...)` | eagerly start an owned child Run |
 | `join(..., count=...)` | await all, the first, or a threshold of handles |
 | `sleep` | park for one second without a worker |
 | `signal` | await an external system callback |
@@ -39,7 +39,7 @@ sequenceDiagram
     participant O as outside operator
     W->>R: risk.score
     R-->>W: recorded score
-    W->>C: spawn primitives.child
+    W->>C: app.start primitives.child
     W->>W: quote race, cancel loser, sleep
     W-->>O: pending external_signal
     O->>W: resolve signal

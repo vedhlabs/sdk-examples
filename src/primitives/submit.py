@@ -1,6 +1,7 @@
 import argparse
 import uuid
 
+from primitives.app import app
 from primitives.methods import methods_tour
 
 
@@ -10,7 +11,7 @@ def main() -> None:
     args = parser.parse_args()
     run_id = f"primitive-{uuid.uuid4().hex[:12]}"
     request = {"customer": " Example Customer ", "amount": args.amount}
-    run = methods_tour.options(run_id=run_id).start(request)
+    run = app.start(methods_tour.options(run_id=run_id), request)
     print(run.id)
 
 

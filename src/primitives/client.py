@@ -1,6 +1,6 @@
-from primitives.app import app
+from example_support.config import connect as connect_client
 
 
 def connect():
-    """Signal-only access to the connection owned by the Primitives App."""
-    return app.client
+    """Create low-level transport access for the signal operator boundary."""
+    return connect_client("primitives-dev")

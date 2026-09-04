@@ -2,6 +2,7 @@ import argparse
 import json
 import uuid
 
+from quickstart.app import app
 from quickstart.sync_client import run_checkout_sync
 from quickstart.workflows import checkout
 
@@ -29,7 +30,7 @@ def main() -> None:
         print(json.dumps(output, indent=2, sort_keys=True))
         return
 
-    run = checkout.options(run_id=order_id).start(order)
+    run = app.start(checkout.options(run_id=order_id), order)
     print(run.id)
 
 

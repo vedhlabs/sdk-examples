@@ -88,10 +88,11 @@ async def month_end(request: dict) -> dict:
     borrowers = request["borrowers"]
     period = request["period"]
     children = [
-        statement.options(
-            run_id=f"{period}-{borrower['id']}",
-            detached=True,
-        ).spawn(
+        app.start(
+            statement.options(
+                run_id=f"{period}-{borrower['id']}",
+                detached=True,
+            ),
             {"borrower": borrower, "period": period},
         )
         for borrower in borrowers

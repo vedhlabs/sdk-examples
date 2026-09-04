@@ -47,7 +47,7 @@ async def methods_tour(request: dict) -> dict:
     normalized = await normalize_request(request)
     risk = await remote_risk_score(normalized)
 
-    child = child_workflow.spawn(normalized)
+    child = app.start(child_workflow, normalized)
     quotes = {
         provider: quote_provider.options(name=f"quote-{provider}")(
             normalized, provider
