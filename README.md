@@ -15,7 +15,8 @@ git clone https://github.com/vedhlabs/sdk-examples.git
 cd sdk-examples
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[dev]"  # installs the breaking context-free SDK 0.3.0
+python -m pip install -e ../sdk-python
+python -m pip install -e ".[dev]" --no-deps
 docker compose up -d
 ```
 
@@ -31,8 +32,7 @@ python -m quickstart.sync_client
 ```
 
 The `quickstart.app` object owns registration, the engine connection, and the worker lifecycle.
-The synchronous caller uses `checkout.options(run_id=order["id"]).run(order)` (or
-`checkout.options(run_id=order["id"]).start(order).result(...)` for custom wait settings) and
+The synchronous caller uses `checkout.options(run_id=order["id"]).start(order).result()` and
 receives an ordinary Python value. The run still executes durably in the worker and survives if
 the caller disconnects.
 
@@ -54,7 +54,7 @@ These are three user experiences over two independent choices:
 
 | Experience | Example | What changes |
 | :--- | :--- | :--- |
-| **Sync** | `checkout.options(run_id=order["id"]).run(order)` | The caller waits for the typed result. |
+| **Sync** | `checkout.options(run_id=order["id"]).start(order).result()` | The caller waits for the typed result. |
 | **Async** | `checkout.options(run_id=order["id"]).start(order)` | The caller receives a durable `RunHandle` immediately; placement defaults to sticky. |
 | **Async Distributed** | `distributed_checkout.options(run_id=order["id"]).start(order)` | The caller receives a `RunHandle`; the workflow declares `execution="async_distributed"`, so steps dispatch independently. |
 
@@ -76,10 +76,10 @@ the caller waits. Public workflow placement is `async` (the sticky default) or
 `async_distributed`; there is no `execution="sync"` workflow mode. Ecommerce, lending,
 primitives, and trading demonstrate distributed placement.
 
-> **Breaking SDK.** These examples require `ogha==0.3.0`. The explicit Context, global workflow
-> decorators, manual Worker authoring surface, and public `async_sticky` spelling were removed.
-> Existing deployments must send 0.3 Runs to a new target or workflow name and drain the old worker
-> fleet; workers do not yet route definitions by `(workflow, version)`.
+> **Breaking SDK candidate.** These examples target the unpublished Python 0.4 candidate. It removes
+> 0.3 aliases such as bare decorators, `.run()`, direct child Workflow calls, `.detach()`,
+> `gather/race/quorum`, `approval()`, and `scheduled_time()`. Install the sibling SDK checkout as
+> shown above. Do not mix 0.3 and 0.4 workers on a target with active Runs.
 
 ## Examples
 
@@ -90,8 +90,7 @@ primitives, and trading demonstrate distributed placement.
 | [Order workflow](docs/ecommerce.md)       | `ecommerce`           | fan-out, quorum, cancel, approval, webhook signal, sleep, event                                         |
 | [Lending](docs/lending.md)                | `lending`             | composed stages, KYC, bureau quorum, approval, disbursement, spawn                                      |
 | [Trading](docs/trading.md)                | `trading`             | scheduled rebalance, drift, risk, approval, order identity, reconciliation                              |
-| [Compact App surface](docs/primitives.md) | `primitives`          | direct calls, remote calls, child workflows, gather/race/quorum, sleep, signal, approval, event, cancel |
-| [Deferred agent research](docs/agentic.md) | `agentic`            | bounded opaque-adapter experiment retained for future research, not the active product story            |
+| [Compact App surface](docs/primitives.md) | `primitives`          | direct calls, remote calls, child workflows, join, sleep, signal, approval policy, event, cancel         |
 
 Use `python -m <package>.<command> --help` for command options. All examples read:
 

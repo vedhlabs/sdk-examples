@@ -5,7 +5,7 @@ import ogha
 from primitives.app import app
 
 
-@app.step
+@app.step()
 def normalize_request(request: dict) -> dict:
     return {"customer": request["customer"].strip().lower(), "amount": int(request["amount"])}
 
@@ -16,14 +16,14 @@ def risk_score(request: dict) -> dict:
     return {"score": score, "band": "low" if score < 50 else "high"}
 
 
-@app.step
+@app.step()
 def quote_provider(request: dict, provider: str) -> dict:
     latency = {"fast": 0.04, "slow": 0.25}[provider]
     time.sleep(latency)
     return {"provider": provider, "price": request["amount"] + (5 if provider == "fast" else 3)}
 
 
-@app.step
+@app.step()
 def create_child_record(request: dict) -> dict:
     return {"child_record": f"record:{request['customer']}"}
 
@@ -47,14 +47,14 @@ async def methods_tour(request: dict) -> dict:
     normalized = await normalize_request(request)
     risk = await remote_risk_score(normalized)
 
-    child = child_workflow(normalized)
+    child = child_workflow.spawn(normalized)
     quotes = {
         provider: quote_provider.options(name=f"quote-{provider}")(
             normalized, provider
         )
         for provider in ("fast", "slow")
     }
-    first_quote = await ogha.race(*quotes.values())
+    first_quote = (await ogha.join(*quotes.values(), count=1))[0]
     for provider, handle in quotes.items():
         if provider != first_quote["provider"]:
             ogha.cancel(handle, reason="first quote already selected")
@@ -62,9 +62,11 @@ async def methods_tour(request: dict) -> dict:
 
     await ogha.sleep(1)
     signal = await ogha.signal("external_signal", timeout=60)
-    approval = await ogha.approval(
-        "manual_approval",
-        {"risk": risk, "quote": first_quote},
+    approval = await ogha.signal(
+        ogha.Approval(
+            "manual_approval",
+            {"risk": risk, "quote": first_quote},
+        ),
         timeout=60,
     )
     ogha.event("TourCompleted", {"approved_by": approval["reviewer"]})

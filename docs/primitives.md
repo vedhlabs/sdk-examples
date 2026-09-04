@@ -7,11 +7,11 @@ Application code uses durable function objects and control helpers directly.
 | :--- | :--- |
 | `step(...)` | normalize input and request provider quotes as direct typed calls |
 | `remote(...)` | invoke `risk.score` across a service boundary |
-| `child_workflow(...)` | eagerly start an independently visible child run |
-| `gather` / `race` / `quorum` | await all, the first, or a threshold of handles |
+| `child_workflow.spawn(...)` | eagerly start an owned child run |
+| `join(..., count=...)` | await all, the first, or a threshold of handles |
 | `sleep` | park for one second without a worker |
 | `signal` | await an external system callback |
-| `approval` | require an operator decision that denies on silence |
+| `ogha.signal(ogha.Approval(...))` | require an operator decision that denies on silence |
 | `event` | write a milestone to the run timeline |
 | `cancel` | stop the quote that lost the race |
 

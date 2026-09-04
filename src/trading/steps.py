@@ -66,7 +66,7 @@ def replace_order(reference: dict, new_limit: str) -> dict:
     return broker.replace(reference["id"], new_limit)
 
 
-@app.step
+@app.step()
 def cancel_open_order(reference: dict) -> dict:
     broker.cancel(reference["id"])
     return {"canceled": reference["id"]}

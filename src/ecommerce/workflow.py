@@ -25,7 +25,7 @@ async def checkout(order: dict) -> dict:
         carrier: price_shipping.options(name=f"quote-{carrier}")(order, carrier)
         for carrier in ("ups", "fedex", "dhl")
     }
-    received = await ogha.quorum(2, *quotes.values())
+    received = await ogha.join(*quotes.values(), count=2)
     winning_carriers = {quote["carrier"] for quote in received}
     for carrier, handle in quotes.items():
         if carrier not in winning_carriers:
@@ -39,7 +39,10 @@ async def checkout(order: dict) -> dict:
 
     if total > 5_000:
         try:
-            review = await ogha.approval("fraud_review", {"total": total}, timeout=120)
+            review = await ogha.signal(
+                ogha.Approval("fraud_review", {"total": total}),
+                timeout=120,
+            )
         except ogha.PermissionDenied:
             return {"status": "rejected", "reason": "not reviewed in time"}
         if not review.get("approved"):

@@ -61,7 +61,7 @@ duplicating its logic.
 }
 ```
 
-It eagerly starts one explicitly detached `lending.statement` run per borrower. The accounting period is input data; the
+It calls `statement.options(detached=True).spawn(...)` once per borrower. The accounting period is input data; the
 workflow never reads the wall clock, so replay remains deterministic.
 
 ## Source map

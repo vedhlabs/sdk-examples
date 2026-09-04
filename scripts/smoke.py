@@ -16,9 +16,6 @@ os.environ.setdefault("TRADING_BROKER", "mock")
 
 import ogha  # noqa: E402
 
-from agentic.app import app as agentic_app  # noqa: E402
-from agentic.types import Ticket  # noqa: E402
-from agentic.workflows import resolve_ticket  # noqa: E402
 from checkout.app import app as checkout_app  # noqa: E402
 from checkout.workflows import checkout as compact_checkout  # noqa: E402
 from ecommerce.app import app as ecommerce_app  # noqa: E402
@@ -37,7 +34,6 @@ from trading.workflows import trading_rebalance  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKERS = (
-    "agentic.worker",
     "quickstart.worker",
     "checkout.worker",
     "reports.worker",
@@ -62,26 +58,6 @@ def submit(
 def run_checks() -> None:
     base = quickstart_app.client
     base.hello()
-
-    # Retained only as regression evidence for the deferred, opaque adapter
-    # experiment. It is not part of the active product story.
-    agentic = agentic_app.client
-    agentic_run = submit(
-        agentic_app,
-        resolve_ticket,
-        Ticket(
-            id=f"AGENT-{SMOKE_ID}",
-            customer_id="customer-42",
-            message="Please refund this order",
-            requested_refund=250,
-        ),
-        "agentic",
-    )
-    gate = pending_promise(agentic, agentic_run.id, "agent_action", timeout_s=20)
-    agentic.resolve(gate.id, b'{"approved":true,"reviewer":"smoke"}')
-    agentic_result = terminal(agentic_run)
-    assert agentic_result.status == "approved"
-    assert agentic_result.proposed_action == "refund:250"
 
     quickstart_run = submit(
         quickstart_app,

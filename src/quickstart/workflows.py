@@ -21,7 +21,7 @@ def reserve_inventory(order: dict) -> dict:
     return inventory.reserve(order, idempotency_key=f"order:{order['id']}:inventory")
 
 
-@app.step
+@app.step()
 def release_inventory(reservation: dict) -> dict:
     return inventory.release(reservation["reservation_id"])
 

@@ -16,7 +16,8 @@ RUN_ID=$(python -m trading.submit growth --date 2026-08-25)
 python -m trading.operator approve "$RUN_ID" --reviewer portfolio-manager
 ```
 
-The initial mock book creates turnover above 10%, so the run waits at `ogha.approval`. Orders fill
+The initial mock book creates turnover above 10%, so the run waits at
+`ogha.signal(ogha.Approval(...))`. Orders fill
 after two status checks and the final positions reconcile to target weights.
 
 ## Execution shape

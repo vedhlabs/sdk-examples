@@ -8,7 +8,7 @@ schedule that belongs to the engine rather than the worker.
 
 ```mermaid
 sequenceDiagram
-    participant S as app.start
+    participant S as workflow.start
     participant E as Ogha engine
     participant W as worker.py
     participant P as local provider
@@ -59,13 +59,13 @@ async def checkout(order):
     return {"order_id": order["id"], "total": validated["total"]}
 ```
 
-The dedicated client then chooses to wait in one call:
+The dedicated client starts the Run and waits on its Handle:
 
 ```python
-result = checkout.options(run_id=order["id"]).run(order)
+result = checkout.options(run_id=order["id"]).start(order).result()
 ```
 
-`Workflow.run` submits and waits for that run to become terminal, then restores the workflow's
+`Workflow.start` submits once; `RunHandle.result` waits for the terminal record and restores the workflow's
 declared Python result type. If the waiting process is killed, the engine and worker continue because
 neither the run nor its lease belongs to the caller connection. Use `Workflow.start` when the caller
 should return immediately with an eager `RunHandle`.
@@ -75,9 +75,9 @@ sequenceDiagram
     participant C as sync_client.py
     participant E as Ogha engine
     participant W as default async worker
-    C->>E: checkout.run(run_id)
+    C->>E: checkout.start(run_id)
     E->>W: execute root task
-    loop Workflow.run polls status
+    loop RunHandle.result polls status
         C->>E: status(run_id)
         E-->>C: running
     end
@@ -94,7 +94,7 @@ python -m quickstart.sync_client  # waits and prints the decoded result
 python -m quickstart.submit --wait  # compact equivalent of the second command
 ```
 
-The SDK checks the terminal record observed by `Workflow.run`. A failed or canceled workflow becomes
+The SDK checks the terminal record observed by `RunHandle.result`. A failed or canceled workflow becomes
 an application error instead of being mistaken for a successful empty response. Caller interruption
 does not cancel the durable run.
 
@@ -151,7 +151,7 @@ converge forward instead of overwriting a newer declaration with an older one.
 ## Common failures
 
 - A run remains pending with no worker: the submit target and worker target differ.
-- A schedule is absent: the module containing `@app.schedule` was never imported before
+- A schedule is absent: the module containing `@app.schedule(...)` was never imported before
   `app.serve()` built the worker.
 - An effect appears twice: the external adapter did not implement a stable idempotency key.
 - A workflow changes behavior after restart: it read time, randomness, environment, or network I/O

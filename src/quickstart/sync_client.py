@@ -29,7 +29,7 @@ def run_checkout_sync(
     caller disconnects.
     """
     configured = checkout.options(run_id=str(order["id"]))
-    output = configured.run(order)
+    output = configured.start(order).result()
     if not isinstance(output, dict):
         raise RuntimeError(f"run {order['id']} returned a non-object result")
     return str(order["id"]), output

@@ -27,7 +27,9 @@ def build_report(report: str, occurrence: str) -> dict:
 )
 @app.workflow(name="quickstart.daily-report")
 async def daily_report(request: dict) -> dict:
-    occurrence = ogha.scheduled_time().isoformat()
+    scheduled_time = ogha.info().scheduled_time
+    assert scheduled_time is not None
+    occurrence = scheduled_time.isoformat()
     report = await build_report(request["report"], occurrence)
     ogha.event("ReportBuilt", report)
     return report

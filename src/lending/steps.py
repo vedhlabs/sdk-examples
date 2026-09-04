@@ -49,7 +49,7 @@ def reserve_funds(applicant: dict, amount: int) -> dict:
     )
 
 
-@app.step
+@app.step()
 def release_reserve(reservation: dict) -> dict:
     return treasury.release(reservation["reservation"])
 

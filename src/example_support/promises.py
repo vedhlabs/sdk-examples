@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import time
 
-import ogha
+from ogha.client import Client
+from ogha.protocol.wire import PromiseState
 
 
-def pending_promise(client: ogha.Client, run_id: str, label: str, timeout_s: float = 10.0):
+def pending_promise(client: Client, run_id: str, label: str, timeout_s: float = 10.0):
     """Poll until the named external wait or gate is visible and pending."""
     deadline = time.monotonic() + timeout_s
     needle = f".{label}."
@@ -15,7 +16,7 @@ def pending_promise(client: ogha.Client, run_id: str, label: str, timeout_s: flo
             (
                 promise
                 for promise in promises
-                if needle in promise.id and promise.state is ogha.PromiseState.PENDING
+                if needle in promise.id and promise.state is PromiseState.PENDING
             ),
             None,
         )
@@ -23,4 +24,3 @@ def pending_promise(client: ogha.Client, run_id: str, label: str, timeout_s: flo
             return match
         time.sleep(0.1)
     raise TimeoutError(f"run {run_id!r} did not expose pending promise {label!r}")
-

@@ -5,11 +5,12 @@ import os
 from typing import Any
 
 import ogha
+from ogha.client import Client
 
 
-def connect(default_namespace: str = "default") -> ogha.Client:
+def connect(default_namespace: str = "default") -> Client:
     """Build the client an App owns, or an operator boundary borrows."""
-    return ogha.connect(
+    return Client(
         os.getenv("OGHA_URL", "http://localhost:8080"),
         tenant=os.getenv("OGHA_TENANT", "default"),
         namespace=os.getenv("OGHA_NAMESPACE", default_namespace),

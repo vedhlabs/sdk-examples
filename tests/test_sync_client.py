@@ -9,10 +9,10 @@ class RecordingRun:
         self.id = run_id
         self.output = output
         self.error = error
-        self.run_calls = []
+        self.result_calls = 0
 
-    def run(self, value):
-        self.run_calls.append(value)
+    def result(self):
+        self.result_calls += 1
         if self.error is not None:
             raise self.error
         return self.output
@@ -24,9 +24,9 @@ def test_sync_client_starts_once_and_returns_the_typed_result(monkeypatch):
     calls = []
 
     class ConfiguredCheckout:
-        def run(self, value):
-            calls.append(("run", value))
-            return run.run(value)
+        def start(self, value):
+            calls.append(("start", value))
+            return run
 
     def options(*, run_id):
         calls.append(("options", run_id))
@@ -38,8 +38,8 @@ def test_sync_client_starts_once_and_returns_the_typed_result(monkeypatch):
 
     assert run_id == "sync-order-42"
     assert output == {"order_id": "sync-order-42", "total": 275}
-    assert calls == [("options", "sync-order-42"), ("run", order)]
-    assert run.run_calls == [order]
+    assert calls == [("options", "sync-order-42"), ("start", order)]
+    assert run.result_calls == 1
 
 
 def test_sync_client_surfaces_a_terminal_workflow_failure(monkeypatch):
@@ -47,8 +47,8 @@ def test_sync_client_surfaces_a_terminal_workflow_failure(monkeypatch):
     run = RecordingRun("sync-order-failed", error=ogha.OghaError("payment declined"))
 
     class ConfiguredCheckout:
-        def run(self, value):
-            return run.run(value)
+        def start(self, value):
+            return run
 
     monkeypatch.setattr(
         "quickstart.sync_client.checkout.options", lambda **_options: ConfiguredCheckout()

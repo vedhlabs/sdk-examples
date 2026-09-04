@@ -94,16 +94,18 @@ async def trading_rebalance(request: dict) -> dict:
 
     account_h = get_account()
     positions_h = get_positions()
-    account, positions = await ogha.gather(account_h, positions_h)
+    account, positions = await ogha.join(account_h, positions_h)
     targets = await model_target_weights(portfolio, positions, account)
     plan = await calculate_plan(targets, positions, account)
     await pretrade_risk(plan)
 
     if Decimal(plan["turnover_pct"]) > APPROVAL_TURNOVER_PCT:
         try:
-            approval = await ogha.approval(
-                "rebalance_approval",
-                {"portfolio": portfolio, "turnover_pct": plan["turnover_pct"]},
+            approval = await ogha.signal(
+                ogha.Approval(
+                    "rebalance_approval",
+                    {"portfolio": portfolio, "turnover_pct": plan["turnover_pct"]},
+                ),
                 timeout=120,
             )
         except ogha.PermissionDenied:
@@ -139,12 +141,14 @@ async def trading_rebalance(request: dict) -> dict:
 )
 @app.workflow(name="trading.rebalance-day", version="1")
 async def rebalance_day(request: dict) -> dict:
-    trade_date = ogha.scheduled_time().date().isoformat()
+    scheduled_time = ogha.info().scheduled_time
+    assert scheduled_time is not None
+    trade_date = scheduled_time.date().isoformat()
     children = [
         trading_rebalance.options(
             run_id=f"{trade_date}-{portfolio}",
             detached=True,
-        )(
+        ).spawn(
             {"portfolio": portfolio, "run_id": f"{trade_date}-{portfolio}"},
         )
         for portfolio in request["portfolios"]

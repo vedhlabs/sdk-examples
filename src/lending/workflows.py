@@ -56,9 +56,11 @@ async def application(request: dict) -> dict:
 
     if underwriting_result["decision"] == "needs_review":
         try:
-            approval = await ogha.approval(
-                "manual_underwriting",
-                {"applicant": applicant["id"], "amount": amount},
+            approval = await ogha.signal(
+                ogha.Approval(
+                    "manual_underwriting",
+                    {"applicant": applicant["id"], "amount": amount},
+                ),
                 timeout=120,
             )
         except ogha.PermissionDenied:
@@ -89,7 +91,7 @@ async def month_end(request: dict) -> dict:
         statement.options(
             run_id=f"{period}-{borrower['id']}",
             detached=True,
-        )(
+        ).spawn(
             {"borrower": borrower, "period": period},
         )
         for borrower in borrowers
