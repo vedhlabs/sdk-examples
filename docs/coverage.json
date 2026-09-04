@@ -21,7 +21,16 @@
     "src/primitives/client.py",
     "src/primitives/methods.py",
     "src/primitives/worker.py",
-    "src/primitives/operator.py"
+    "src/primitives/operator.py",
+    "src/agentic/app.py",
+    "src/agentic/agent.py",
+    "src/agentic/adapter.py",
+    "src/agentic/types.py",
+    "src/agentic/workflows.py",
+    "src/agentic/worker.py",
+    "src/agentic/submit.py",
+    "src/agentic/operator.py",
+    "docs/agentic.md"
   ],
   "src/pages/ogha/use-cases/index.md": [
     "docs/ecommerce.md",

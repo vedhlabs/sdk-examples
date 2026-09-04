@@ -26,7 +26,7 @@ def test_runnable_python_has_no_empty_function_bodies():
     for path in (ROOT / "src").rglob("*.py"):
         tree = ast.parse(path.read_text(), filename=str(path))
         for node in ast.walk(tree):
-            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue
             assert not any(isinstance(statement, ast.Pass) for statement in node.body), path
             if path.name != "broker.py":
@@ -36,4 +36,3 @@ def test_runnable_python_has_no_empty_function_bodies():
                     and statement.value.value is Ellipsis
                     for statement in node.body
                 ), path
-

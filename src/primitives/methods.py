@@ -48,13 +48,15 @@ async def methods_tour(request: dict) -> dict:
     risk = await remote_risk_score(normalized)
 
     child = child_workflow(normalized)
-    quotes = [
-        quote_provider.options(name=f"quote-{provider}")(normalized, provider)
+    quotes = {
+        provider: quote_provider.options(name=f"quote-{provider}")(
+            normalized, provider
+        )
         for provider in ("fast", "slow")
-    ]
-    first_quote = await ogha.race(*quotes)
-    for handle in quotes:
-        if not handle.settled:
+    }
+    first_quote = await ogha.race(*quotes.values())
+    for provider, handle in quotes.items():
+        if provider != first_quote["provider"]:
             ogha.cancel(handle, reason="first quote already selected")
     child_result = await child
 

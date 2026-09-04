@@ -20,13 +20,14 @@ async def run_kyc(applicant: dict) -> dict:
 
 
 async def run_underwriting(applicant: dict, amount: int) -> dict:
-    pulls = [
-        pull_bureau.options(name=f"bureau-{bureau}")(applicant, bureau)
+    pulls = {
+        bureau: pull_bureau.options(name=f"bureau-{bureau}")(applicant, bureau)
         for bureau in ("experian", "equifax", "transunion")
-    ]
-    scores = await ogha.quorum(2, *pulls)
-    for handle in pulls:
-        if not handle.settled:
+    }
+    scores = await ogha.quorum(2, *pulls.values())
+    winning_bureaus = {score["bureau"] for score in scores}
+    for bureau, handle in pulls.items():
+        if bureau not in winning_bureaus:
             ogha.cancel(handle, reason="two bureaus already received")
     result = await decide(applicant, scores, amount)
     ogha.event("Underwritten", result)

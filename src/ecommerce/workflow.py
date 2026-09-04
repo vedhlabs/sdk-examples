@@ -21,13 +21,17 @@ async def checkout(order: dict) -> dict:
 
     cart = await validate_cart(order)
 
-    quotes = [
-        price_shipping.options(name=f"quote-{carrier}")(order, carrier)
+    quotes = {
+        carrier: price_shipping.options(name=f"quote-{carrier}")(order, carrier)
         for carrier in ("ups", "fedex", "dhl")
-    ]
-    received = await ogha.quorum(2, *quotes)
-    for handle in quotes:
-        if not handle.settled:
+    }
+    received = await ogha.quorum(2, *quotes.values())
+    winning_carriers = {quote["carrier"] for quote in received}
+    for carrier, handle in quotes.items():
+        if carrier not in winning_carriers:
+            # Reissue the same cancellation during replay as well. A loser is
+            # terminal after the first pass, but still belongs to this scope;
+            # calling cancel again is idempotent and releases that ownership.
             ogha.cancel(handle, reason="two quotes already received")
     best = min(received, key=lambda quote: quote["price"])
     total = cart["total"] + best["price"]

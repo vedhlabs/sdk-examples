@@ -67,14 +67,15 @@ the caller waits. Worker placement remains `async_sticky` or `async_distributed`
 
 ## Examples
 
-| Guide | Package | What it demonstrates |
-| :--- | :--- | :--- |
-| [Quickstart](docs/quickstart.md) | `quickstart` | sync waiting, async submit, workflow placement, crash recovery, schedules |
-| [Checkout and reports](docs/checkout.md) | `checkout`, `reports` | provider idempotency, compensation shape, engine cron |
-| [Order workflow](docs/ecommerce.md) | `ecommerce` | fan-out, quorum, cancel, approval, webhook signal, sleep, event |
-| [Lending](docs/lending.md) | `lending` | composed stages, KYC, bureau quorum, approval, disbursement, spawn |
-| [Trading](docs/trading.md) | `trading` | scheduled rebalance, drift, risk, approval, order identity, reconciliation |
-| [Compact App surface](docs/primitives.md) | `primitives` | direct calls, remote calls, child workflows, gather/race/quorum, sleep, signal, approval, event, cancel |
+| Guide                                     | Package               | What it demonstrates                                                                                    |
+| :---------------------------------------- | :-------------------- | :------------------------------------------------------------------------------------------------------ |
+| [Quickstart](docs/quickstart.md)          | `quickstart`          | sync waiting, async submit, workflow placement, crash recovery, schedules                               |
+| [Checkout and reports](docs/checkout.md)  | `checkout`, `reports` | provider idempotency, compensation shape, engine cron                                                   |
+| [Order workflow](docs/ecommerce.md)       | `ecommerce`           | fan-out, quorum, cancel, approval, webhook signal, sleep, event                                         |
+| [Lending](docs/lending.md)                | `lending`             | composed stages, KYC, bureau quorum, approval, disbursement, spawn                                      |
+| [Trading](docs/trading.md)                | `trading`             | scheduled rebalance, drift, risk, approval, order identity, reconciliation                              |
+| [Compact App surface](docs/primitives.md) | `primitives`          | direct calls, remote calls, child workflows, gather/race/quorum, sleep, signal, approval, event, cancel |
+| [Agentic AI](docs/agentic.md)             | `agentic`             | adapter-owned config, fail-fast App installation, typed opaque agent call, approval                     |
 
 Use `python -m <package>.<command> --help` for command options. All examples read:
 
