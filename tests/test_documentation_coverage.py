@@ -11,6 +11,7 @@ def test_every_public_documentation_page_has_existing_canonical_sources():
     assert set(coverage) == {
         "src/pages/aga/index.md",
         "src/pages/aga/python.md",
+        "src/pages/aga/capabilities.md",
         "src/pages/aga/use-cases/index.md",
         "src/pages/aga/use-cases/order.md",
         "src/pages/aga/use-cases/lending.md",

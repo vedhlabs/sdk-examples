@@ -15,6 +15,7 @@ os.environ.setdefault("AGA_EXAMPLE_STATE", f".state/smoke-{SMOKE_ID}.sqlite3")
 os.environ.setdefault("TRADING_BROKER", "mock")
 
 import aga_runtime as aga  # noqa: E402
+from aga_runtime.protocol.wire import Feature  # noqa: E402
 
 from checkout.app import app as checkout_app  # noqa: E402
 from checkout.workflows import checkout as compact_checkout  # noqa: E402
@@ -59,7 +60,7 @@ def submit(
     return app.start(workflow.options(run_id=run_id), value)
 
 
-def run_checks() -> None:
+def run_checks(*, supports_schedules: bool) -> None:
     base = connect_quickstart()
     base.hello()
 
@@ -147,6 +148,10 @@ def run_checks() -> None:
     assert trading_result["status"] == "completed"
     assert trading_result["reconciliation"]["within_band"] is True
 
+    if not supports_schedules:
+        print("schedule checks skipped: active backend does not advertise SCHEDULES")
+        return
+
     deadline = time.monotonic() + 10
     expected_schedules = {
         "quickstart.daily-report",
@@ -180,30 +185,42 @@ def run_checks() -> None:
 
 
 def main() -> None:
+    probe = connect_quickstart()
+    try:
+        supports_schedules = probe.hello().has(Feature.SCHEDULES)
+    finally:
+        probe.close()
+    worker_modules = (
+        WORKERS
+        if supports_schedules
+        else tuple(module for module in WORKERS if module != "reports.worker")
+    )
+    worker_env = os.environ.copy()
+    worker_env["AGA_EXAMPLE_SCHEDULES"] = "1" if supports_schedules else "0"
     processes: list[subprocess.Popen] = []
     logs: list[object] = []
     with tempfile.TemporaryDirectory(prefix="aga-sdk-smoke-") as log_dir:
         try:
-            for module in WORKERS:
+            for module in worker_modules:
                 log = open(Path(log_dir) / f"{module}.log", "w+", encoding="utf-8")
                 logs.append(log)
                 processes.append(
                     subprocess.Popen(
                         [sys.executable, "-m", module],
                         cwd=ROOT,
-                        env=os.environ.copy(),
+                        env=worker_env,
                         stdout=log,
                         stderr=subprocess.STDOUT,
                     )
                 )
             time.sleep(2)
-            for module, process in zip(WORKERS, processes, strict=True):
+            for module, process in zip(worker_modules, processes, strict=True):
                 if process.poll() is not None:
                     raise RuntimeError(f"worker {module} exited with {process.returncode}")
-            run_checks()
+            run_checks(supports_schedules=supports_schedules)
             print(f"smoke passed in namespace {os.environ['AGA_NAMESPACE']}")
         except Exception:
-            for module, process, log in zip(WORKERS, processes, logs, strict=True):
+            for module, process, log in zip(worker_modules, processes, logs, strict=True):
                 log.flush()
                 log.seek(0)
                 output = log.read()

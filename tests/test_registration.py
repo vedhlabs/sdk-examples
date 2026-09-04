@@ -15,7 +15,8 @@ from quickstart.workflows import checkout as quickstart_checkout
 from reports.app import app as reports_app
 from reports.workflows import reports_daily
 from trading.app import app as trading_app
-from trading.workflows import rebalance_day, trading_rebalance
+from trading.schedules import rebalance_day
+from trading.workflows import trading_rebalance
 
 
 def test_documented_workflow_names_and_targets_are_registered():

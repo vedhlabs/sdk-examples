@@ -23,6 +23,15 @@
     "src/primitives/worker.py",
     "src/primitives/operator.py"
   ],
+  "src/pages/aga/capabilities.md": [
+    "scripts/smoke.py",
+    "src/quickstart/workflows.py",
+    "src/primitives/methods.py",
+    "src/ecommerce/workflow.py",
+    "src/lending/workflows.py",
+    "src/trading/schedules.py",
+    "src/trading/workflows.py"
+  ],
   "src/pages/aga/use-cases/index.md": [
     "docs/ecommerce.md",
     "docs/lending.md",
@@ -54,6 +63,7 @@
     "src/trading/adapters/alpaca.py",
     "src/trading/adapters/mock.py",
     "src/trading/domain.py",
+    "src/trading/schedules.py",
     "src/trading/steps.py",
     "src/trading/workflows.py",
     "src/trading/worker.py",
