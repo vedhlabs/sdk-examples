@@ -1,14 +1,15 @@
-# Ogha Python SDK examples
+# Aga Python SDK examples
 
-This repository is the runnable companion to the [Ogha documentation](https://coding2fun.in/ogha).
+This repository is the runnable companion to the [Aga documentation](https://coding2fun.in/aga).
 Every Python source file shown on the product, SDK, order, lending, and trading pages lives here as
-working code. The examples use the real Ogha SDK and engine. Local adapters simulate payment,
+working code. The examples use the real Aga SDK and engine. Local adapters simulate payment,
 inventory, compliance, lending, and brokerage systems so no paid account or cloud credential is
 required.
 
 ## Start here
 
-Requirements: Python 3.10+, Docker, and Docker Compose.
+Requirements: Python 3.10+, Docker with Compose, sibling `aga` and `sdk-python`
+checkouts, and a `GITHUB_TOKEN` that can read the private Aga Go modules.
 
 ```bash
 git clone https://github.com/vedhlabs/sdk-examples.git
@@ -20,7 +21,10 @@ python -m pip install -e ".[dev]" --no-deps
 docker compose up -d
 ```
 
-Open [http://localhost:8080](http://localhost:8080) for the Ogha dashboard. Then run the
+The Compose project builds the current sibling Aga engine locally. It does not
+depend on an unpublished container tag.
+
+Open [http://localhost:8080](http://localhost:8080) for the Aga dashboard. Then run the
 quickstart in two terminals:
 
 ```bash
@@ -39,9 +43,9 @@ the caller disconnects.
 
 ## The durable-promise mental model
 
-Every durable function call immediately returns an awaitable handle. Ogha stores the identified
+Every durable function call immediately returns an awaitable handle. Aga stores the identified
 operation and, after it commits a terminal result, replay reads that result instead of executing the
-function again. In short: **call returns a promise; Ogha stores the promise; recovery reuses its
+function again. In short: **call returns a promise; Aga stores the promise; recovery reuses its
 committed value**.
 
 That model explains the API, but it is not the whole distributed-systems contract. Work that never
@@ -100,13 +104,13 @@ child must outlive its parent.
 
 Use `python -m <package>.<command> --help` for command options. All examples read:
 
-- `OGHA_URL`, default `http://localhost:8080`
-- `OGHA_NAMESPACE`, default `default`
-- `OGHA_EXAMPLE_STATE`, default `.state/examples.sqlite3`
+- `AGA_URL`, default `http://localhost:8080`
+- `AGA_NAMESPACE`, default `default`
+- `AGA_EXAMPLE_STATE`, default `.state/examples.sqlite3`
 
 ## External effects and retries
 
-Ogha guarantees durable progress. A committed durable call result is reused during replay. It
+Aga guarantees durable progress. A committed durable call result is reused during replay. It
 cannot atomically combine its PostgreSQL commit with an
 unrelated payment, email, treasury, or broker API. If a worker loses the response after the
 provider accepted a request, that step can run again. Every effectful mock in this repository
@@ -114,7 +118,7 @@ therefore accepts a stable business idempotency key and returns the original res
 Production adapters must use the same provider-side capability or an application-owned inbox,
 outbox, or reconciliation design.
 
-`client.apply_once(...)` is useful as an Ogha-side admission marker. It is not, by itself, an
+`client.apply_once(...)` is useful as an Aga-side admission marker. It is not, by itself, an
 atomic exactly-once wrapper around a separate network request.
 
 ## Verification
@@ -145,7 +149,7 @@ before enabling it.
 
 ## Coverage contract
 
-[docs/COVERAGE.md](docs/COVERAGE.md) maps every Ogha documentation page to its canonical source
+[docs/COVERAGE.md](docs/COVERAGE.md) maps every Aga documentation page to its canonical source
 files. `tests/test_documentation_coverage.py` checks that every mapped path exists and contains no
 placeholder bodies or ellipses.
 

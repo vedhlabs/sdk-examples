@@ -1,12 +1,12 @@
 {
-  "src/pages/ogha/index.md": [
+  "src/pages/aga/index.md": [
     "src/checkout/app.py",
     "src/checkout/workflows.py",
     "src/reports/app.py",
     "src/ecommerce/steps.py",
     "src/reports/workflows.py"
   ],
-  "src/pages/ogha/python.md": [
+  "src/pages/aga/python.md": [
     "compose.yml",
     "src/quickstart/app.py",
     "src/quickstart/workflows.py",
@@ -23,13 +23,13 @@
     "src/primitives/worker.py",
     "src/primitives/operator.py"
   ],
-  "src/pages/ogha/use-cases/index.md": [
+  "src/pages/aga/use-cases/index.md": [
     "docs/ecommerce.md",
     "docs/lending.md",
     "docs/trading.md",
     "docs/primitives.md"
   ],
-  "src/pages/ogha/use-cases/order.md": [
+  "src/pages/aga/use-cases/order.md": [
     "src/ecommerce/app.py",
     "src/ecommerce/client.py",
     "src/ecommerce/steps.py",
@@ -38,7 +38,7 @@
     "src/ecommerce/submit.py",
     "src/ecommerce/worker.py"
   ],
-  "src/pages/ogha/use-cases/lending.md": [
+  "src/pages/aga/use-cases/lending.md": [
     "src/lending/app.py",
     "src/lending/client.py",
     "src/lending/steps.py",
@@ -48,7 +48,7 @@
     "src/lending/submit.py",
     "src/lending/approvals.py"
   ],
-  "src/pages/ogha/use-cases/trading.md": [
+  "src/pages/aga/use-cases/trading.md": [
     "src/trading/app.py",
     "src/trading/client.py",
     "src/trading/adapters/alpaca.py",

@@ -1,6 +1,6 @@
 import time
 
-import ogha
+import aga_runtime as aga
 
 from primitives.app import app
 
@@ -10,7 +10,7 @@ def normalize_request(request: dict) -> dict:
     return {"customer": request["customer"].strip().lower(), "amount": int(request["amount"])}
 
 
-@app.step(name="risk.score", retry=ogha.RetryPolicy(max_attempts=3), timeout=10)
+@app.step(name="risk.score", retry=aga.RetryPolicy(max_attempts=3), timeout=10)
 def risk_score(request: dict) -> dict:
     score = 25 if request["amount"] < 1_000 else 70
     return {"score": score, "band": "low" if score < 50 else "high"}
@@ -54,22 +54,22 @@ async def methods_tour(request: dict) -> dict:
         )
         for provider in ("fast", "slow")
     }
-    first_quote = (await ogha.join(*quotes.values(), count=1))[0]
+    first_quote = (await aga.join(*quotes.values(), count=1))[0]
     for provider, handle in quotes.items():
         if provider != first_quote["provider"]:
-            ogha.cancel(handle, reason="first quote already selected")
+            aga.cancel(handle, reason="first quote already selected")
     child_result = await child
 
-    await ogha.sleep(1)
-    signal = await ogha.signal("external_signal", timeout=60)
-    approval = await ogha.signal(
-        ogha.Approval(
+    await aga.sleep(1)
+    signal = await aga.signal("external_signal", timeout=60)
+    approval = await aga.signal(
+        aga.Approval(
             "manual_approval",
             {"risk": risk, "quote": first_quote},
         ),
         timeout=60,
     )
-    ogha.event("TourCompleted", {"approved_by": approval["reviewer"]})
+    aga.event("TourCompleted", {"approved_by": approval["reviewer"]})
     return {
         "normalized": normalized,
         "risk": risk,

@@ -1,33 +1,43 @@
-# Local Ogha stack used by every example in this repository.
-name: ogha-sdk-examples
+# Local Aga stack used by every example in this repository.
+name: aga-sdk-examples
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ogha
-      POSTGRES_PASSWORD: ogha-local
-      POSTGRES_DB: ogha
+      POSTGRES_USER: aga
+      POSTGRES_PASSWORD: aga-local
+      POSTGRES_DB: aga
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ogha -d ogha"]
+      test: ["CMD-SHELL", "pg_isready -U aga -d aga"]
       interval: 5s
       timeout: 3s
       retries: 20
     volumes:
-      - ogha-postgres:/var/lib/postgresql/data
+      - aga-postgres:/var/lib/postgresql/data
 
-  ogha:
-    image: public.ecr.aws/h6s8i3h8/ogha:0.1.2-obf
+  aga:
+    image: ${AGA_ENGINE_IMAGE:-aga:dev}
+    build:
+      context: ../aga
+      dockerfile: Dockerfile
+      args:
+        TAGS: aga_postgres
+      secrets:
+        - github_token
     depends_on:
       postgres:
         condition: service_healthy
     command:
       - --storage=postgres
-      - --dsn=postgres://ogha:ogha-local@postgres:5432/ogha?sslmode=disable
+      - --dsn=postgres://aga:aga-local@postgres:5432/aga?sslmode=disable
       - --auth-disabled
       - --addr=0.0.0.0:8080
     ports:
       - "8080:8080"
 
 volumes:
-  ogha-postgres:
+  aga-postgres:
 
+secrets:
+  github_token:
+    environment: GITHUB_TOKEN

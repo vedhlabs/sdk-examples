@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-import ogha
+import aga_runtime as aga
 
 from trading import domain
 from trading.adapters import books, broker_from_env, model
@@ -11,22 +11,22 @@ MAX_ORDER_NOTIONAL = Decimal("50000")
 RESTRICTED = {"GME"}
 
 
-@app.step(retry=ogha.RetryPolicy(max_attempts=4), timeout=15)
+@app.step(retry=aga.RetryPolicy(max_attempts=4), timeout=15)
 def market_clock() -> dict:
     return broker.clock()
 
 
-@app.step(retry=ogha.RetryPolicy(max_attempts=4), timeout=15)
+@app.step(retry=aga.RetryPolicy(max_attempts=4), timeout=15)
 def get_account() -> dict:
     return broker.account()
 
 
-@app.step(retry=ogha.RetryPolicy(max_attempts=4), timeout=15)
+@app.step(retry=aga.RetryPolicy(max_attempts=4), timeout=15)
 def get_positions() -> list[dict]:
     return broker.positions()
 
 
-@app.step(retry=ogha.RetryPolicy(max_attempts=2), timeout=60)
+@app.step(retry=aga.RetryPolicy(max_attempts=2), timeout=60)
 def model_target_weights(portfolio: str, positions: list[dict], account: dict) -> dict:
     return model.target_weights(portfolio, positions, account)
 
@@ -47,7 +47,7 @@ def pretrade_risk(plan: dict) -> dict:
 
 
 @app.step(
-    retry=ogha.RetryPolicy(max_attempts=5),
+    retry=aga.RetryPolicy(max_attempts=5),
     timeout=45,
     compensate_with="cancel_open_order",
 )
@@ -56,12 +56,12 @@ def place_order(order: dict, client_order_id: str) -> dict:
     return existing or broker.place(order, client_order_id)
 
 
-@app.step(retry=ogha.RetryPolicy(max_attempts=3), timeout=15)
+@app.step(retry=aga.RetryPolicy(max_attempts=3), timeout=15)
 def check_fill(reference: dict) -> dict:
     return broker.order(reference["id"])
 
 
-@app.step(retry=ogha.RetryPolicy(max_attempts=3), timeout=30)
+@app.step(retry=aga.RetryPolicy(max_attempts=3), timeout=30)
 def replace_order(reference: dict, new_limit: str) -> dict:
     return broker.replace(reference["id"], new_limit)
 
@@ -72,7 +72,7 @@ def cancel_open_order(reference: dict) -> dict:
     return {"canceled": reference["id"]}
 
 
-@app.step(retry=ogha.RetryPolicy(max_attempts=3), timeout=15)
+@app.step(retry=aga.RetryPolicy(max_attempts=3), timeout=15)
 def reconcile(targets: dict, equity: str) -> dict:
     return domain.reconciliation(targets, broker.positions(), equity)
 

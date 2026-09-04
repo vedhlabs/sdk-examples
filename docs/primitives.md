@@ -11,7 +11,7 @@ Application code uses durable function objects and control helpers directly.
 | `join(..., count=...)` | await all, the first, or a threshold of handles |
 | `sleep` | park for one second without a worker |
 | `signal` | await an external system callback |
-| `ogha.signal(ogha.Approval(...))` | require an operator decision that denies on silence |
+| `aga.signal(aga.Approval(...))` | require an operator decision that denies on silence |
 | `event` | write a milestone to the run timeline |
 | `cancel` | stop the quote that lost the race |
 

@@ -9,7 +9,7 @@ schedule that belongs to the engine rather than the worker.
 ```mermaid
 sequenceDiagram
     participant S as app.start
-    participant E as Ogha engine
+    participant E as Aga engine
     participant W as worker.py
     participant P as local provider
     S->>E: submit quickstart.checkout
@@ -20,7 +20,7 @@ sequenceDiagram
     E-->>S: terminal run
 ```
 
-Ogha persists every identified call as a promise. Recovery replays the workflow and returns an
+Aga persists every identified call as a promise. Recovery replays the workflow and returns an
 already committed value at each matching call instead of repeating it. The provider remembers
 effect identity. Both are needed:
 the engine cannot know whether a remote payment committed when a worker disappeared before
@@ -44,7 +44,7 @@ reservation, charge, and receipt IDs. Re-run the command to create a new busines
 
 ## Synchronous caller versus asynchronous submission
 
-Ogha has two worker-placement modes: `async` and `async_distributed`. Synchronous waiting is
+Aga has two worker-placement modes: `async` and `async_distributed`. Synchronous waiting is
 an independent client choice, not a third mode. The workflow declares its real placement:
 
 ```python
@@ -73,7 +73,7 @@ return immediately with the eager `Handle`.
 ```mermaid
 sequenceDiagram
     participant C as sync_client.py
-    participant E as Ogha engine
+    participant E as Aga engine
     participant W as default async worker
     C->>E: app.start(checkout, run_id)
     E->>W: execute root task
@@ -128,7 +128,7 @@ PY
 ```
 
 `START` can appear twice. That is the honest failure window: the file write happened, but the
-worker died before Ogha knew the step finished. A production provider operation must use the same
+worker died before Aga knew the step finished. A production provider operation must use the same
 stable key on the retry. The inventory adapter in this example does exactly that.
 
 Canonical files: [`crash_workflow.py`](../src/quickstart/crash_workflow.py) and

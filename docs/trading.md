@@ -17,7 +17,7 @@ python -m trading.operator approve "$RUN_ID" --reviewer portfolio-manager
 ```
 
 The initial mock book creates turnover above 10%, so the run waits at
-`ogha.signal(ogha.Approval(...))`. Orders fill
+`aga.signal(aga.Approval(...))`. Orders fill
 after two status checks and the final positions reconcile to target weights.
 
 ## Execution shape

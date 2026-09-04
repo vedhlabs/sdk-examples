@@ -53,7 +53,7 @@ flowchart TD
 
 The quote fan-out is genuinely distributed because the workflow declares
 `execution="async_distributed"`. After two replies, the durable winner identities determine every
-nonwinner, and `ogha.cancel` rejects each nonwinner idempotently on every replay. The workflow does
+nonwinner, and `aga.cancel` rejects each nonwinner idempotently on every replay. The workflow does
 not infer winners from process-local `Handle.settled` state. Calls are eager, so all three durable
 promises exist before the workflow awaits the quorum.
 
@@ -67,4 +67,4 @@ promises exist before the workflow awaits the quorum.
   [`submit.py`](../src/ecommerce/submit.py)
 
 The local payment, inventory, shipping, and mail adapters persist results in SQLite by business
-idempotency key. They model the contract expected from real providers; they are not Ogha storage.
+idempotency key. They model the contract expected from real providers; they are not Aga storage.

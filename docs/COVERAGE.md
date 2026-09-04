@@ -1,7 +1,7 @@
 # Documentation coverage
 
 The public docs and this repository have one ownership rule: prose may summarize, but runnable
-Python lives here. Every real source-file label in the six Ogha pages links to a file in this repo.
+Python lives here. Every real source-file label in the six Aga pages links to a file in this repo.
 
 | Public page    | Runnable packages                     | Verification                                                                                |
 | :------------- | :------------------------------------ | :------------------------------------------------------------------------------------------ |

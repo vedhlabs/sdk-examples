@@ -9,12 +9,12 @@ def test_every_public_documentation_page_has_existing_canonical_sources():
     coverage = json.loads((ROOT / "docs/coverage.json").read_text())
 
     assert set(coverage) == {
-        "src/pages/ogha/index.md",
-        "src/pages/ogha/python.md",
-        "src/pages/ogha/use-cases/index.md",
-        "src/pages/ogha/use-cases/order.md",
-        "src/pages/ogha/use-cases/lending.md",
-        "src/pages/ogha/use-cases/trading.md",
+        "src/pages/aga/index.md",
+        "src/pages/aga/python.md",
+        "src/pages/aga/use-cases/index.md",
+        "src/pages/aga/use-cases/order.md",
+        "src/pages/aga/use-cases/lending.md",
+        "src/pages/aga/use-cases/trading.md",
     }
     for paths in coverage.values():
         assert paths

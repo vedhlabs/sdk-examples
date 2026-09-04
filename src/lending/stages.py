@@ -1,4 +1,4 @@
-import ogha
+import aga_runtime as aga
 
 from lending.steps import (
     check_identity,
@@ -13,7 +13,7 @@ from lending.steps import (
 async def run_kyc(applicant: dict) -> dict:
     identity_h = check_identity.options(name="identity")(applicant)
     sanctions_h = screen_sanctions.options(name="sanctions")(applicant)
-    identity, sanctions = await ogha.join(identity_h, sanctions_h)
+    identity, sanctions = await aga.join(identity_h, sanctions_h)
     if sanctions["sanctioned"]:
         return {"passed": False, "reason": "sanctions_hit"}
     return {"passed": True, "ref": identity["ref"]}
@@ -24,13 +24,13 @@ async def run_underwriting(applicant: dict, amount: int) -> dict:
         bureau: pull_bureau.options(name=f"bureau-{bureau}")(applicant, bureau)
         for bureau in ("experian", "equifax", "transunion")
     }
-    scores = await ogha.join(*pulls.values(), count=2)
+    scores = await aga.join(*pulls.values(), count=2)
     winning_bureaus = {score["bureau"] for score in scores}
     for bureau, handle in pulls.items():
         if bureau not in winning_bureaus:
-            ogha.cancel(handle, reason="two bureaus already received")
+            aga.cancel(handle, reason="two bureaus already received")
     result = await decide(applicant, scores, amount)
-    ogha.event("Underwritten", result)
+    aga.event("Underwritten", result)
     return result
 
 

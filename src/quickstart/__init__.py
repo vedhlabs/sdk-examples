@@ -1,2 +1,2 @@
-"""The smallest complete Ogha application."""
+"""The smallest complete Aga application."""
 

@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-import ogha
+import aga_runtime as aga
 
 from trading.app import app
 from trading.steps import (
@@ -64,7 +64,7 @@ async def work_orders(orders: list[dict], run_tag: str, rounds: int = 3) -> dict
                         pending["ref"],
                         new_limit,
                     )
-        await ogha.sleep(1)
+        await aga.sleep(1)
 
     for pending in placed:
         if pending["state"] == "open":
@@ -89,26 +89,26 @@ async def trading_rebalance(request: dict) -> dict:
     if not clock["session_today"]:
         return {"portfolio": portfolio, "action": "market_closed"}
     if not clock["is_open"]:
-        ogha.event("WaitingForOpen", clock)
-        await ogha.sleep(clock["seconds_to_open"])
+        aga.event("WaitingForOpen", clock)
+        await aga.sleep(clock["seconds_to_open"])
 
     account_h = get_account()
     positions_h = get_positions()
-    account, positions = await ogha.join(account_h, positions_h)
+    account, positions = await aga.join(account_h, positions_h)
     targets = await model_target_weights(portfolio, positions, account)
     plan = await calculate_plan(targets, positions, account)
     await pretrade_risk(plan)
 
     if Decimal(plan["turnover_pct"]) > APPROVAL_TURNOVER_PCT:
         try:
-            approval = await ogha.signal(
-                ogha.Approval(
+            approval = await aga.signal(
+                aga.Approval(
                     "rebalance_approval",
                     {"portfolio": portfolio, "turnover_pct": plan["turnover_pct"]},
                 ),
                 timeout=120,
             )
-        except ogha.PermissionDenied:
+        except aga.PermissionDenied:
             return {"portfolio": portfolio, "status": "rejected", "reason": "not reviewed"}
         if not approval.get("approved"):
             return {"portfolio": portfolio, "status": "rejected", "reason": "denied"}
@@ -122,7 +122,7 @@ async def trading_rebalance(request: dict) -> dict:
         {"sells": sells, "buys": buys},
         reconciled,
     )
-    ogha.event("RebalanceRecorded", {"record_id": record["record_id"]})
+    aga.event("RebalanceRecorded", {"record_id": record["record_id"]})
     return {
         "portfolio": portfolio,
         "status": "completed",
@@ -136,12 +136,12 @@ async def trading_rebalance(request: dict) -> dict:
     "0 12 * * 1-5",
     schedule_id="trading.rebalance-day",
     input={"portfolios": ["growth", "income"]},
-    overlap=ogha.OVERLAP_SKIP,
+    overlap=aga.OVERLAP_SKIP,
     revision=1,
 )
 @app.workflow(name="trading.rebalance-day", version="1")
 async def rebalance_day(request: dict) -> dict:
-    scheduled_time = ogha.info().scheduled_time
+    scheduled_time = aga.info().scheduled_time
     assert scheduled_time is not None
     trade_date = scheduled_time.date().isoformat()
     children = [

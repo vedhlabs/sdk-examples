@@ -31,6 +31,8 @@ def main() -> None:
 
     current = client.get_schedule(args.schedule_id)
     tags = current.tags or {}
+    # Hosted-v1 schedule tags are frozen replay/storage identifiers. Aga keeps
+    # reading them so an existing schedule can be upgraded without migration.
     client.update_schedule(
         current.id,
         tags.get("ogha:wf", "quickstart.daily-report"),

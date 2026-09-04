@@ -1,4 +1,4 @@
-import ogha
+import aga_runtime as aga
 
 from checkout.app import app as checkout_app
 from checkout.workflows import charge_order, create_shipment
@@ -32,7 +32,7 @@ def test_documented_workflow_names_and_targets_are_registered():
         methods_tour: ("primitives.tour", "python://primitives"),
     }
     for function, (name, target) in expected.items():
-        spec = function.__ogha_spec__
+        spec = function.__aga_spec__
         assert spec.name == name
         assert spec.target == target
 
@@ -53,10 +53,10 @@ def test_every_example_is_owned_by_one_isolated_app():
 
 
 def test_fanout_workflows_are_distributed():
-    assert ecommerce_checkout.__ogha_spec__.execution == "async_distributed"
-    assert application.__ogha_spec__.execution == "async_distributed"
-    assert trading_rebalance.__ogha_spec__.execution == "async_distributed"
-    assert methods_tour.__ogha_spec__.execution == "async_distributed"
+    assert ecommerce_checkout.__aga_spec__.execution == "async_distributed"
+    assert application.__aga_spec__.execution == "async_distributed"
+    assert trading_rebalance.__aga_spec__.execution == "async_distributed"
+    assert methods_tour.__aga_spec__.execution == "async_distributed"
 
 
 def test_schedules_and_rpc_method_are_declared():
@@ -66,14 +66,14 @@ def test_schedules_and_rpc_method_are_declared():
         rebalance_day: "trading.rebalance-day",
     }
     for workflow, schedule_id in schedules.items():
-        schedule = workflow.__ogha_spec__.schedule
+        schedule = workflow.__aga_spec__.schedule
         assert schedule.schedule_id == schedule_id
         assert not (
-            schedule.overlap == ogha.OVERLAP_SKIP and schedule.catch_up_window_ms > 0
+            schedule.overlap == aga.OVERLAP_SKIP and schedule.catch_up_window_ms > 0
         ), "OVERLAP_SKIP and catch-up are mutually exclusive"
-    assert risk_score.__ogha_step_name__ == "risk.score"
+    assert risk_score.__aga_step_name__ == "risk.score"
 
 
 def test_compact_checkout_places_the_pivot_at_payment():
-    assert charge_order.__ogha_spec__.pivot is True
-    assert create_shipment.__ogha_spec__.pivot is False
+    assert charge_order.__aga_spec__.pivot is True
+    assert create_shipment.__aga_spec__.pivot is False

@@ -1,4 +1,4 @@
-import ogha
+import aga_runtime as aga
 
 from quickstart.adapters import inventory, mailer, payments
 from quickstart.app import app
@@ -13,7 +13,7 @@ def validate_order(order: dict) -> dict:
 
 
 @app.step(
-    retry=ogha.RetryPolicy(max_attempts=4),
+    retry=aga.RetryPolicy(max_attempts=4),
     timeout=20,
     compensate_with="release_inventory",
 )
@@ -26,7 +26,7 @@ def release_inventory(reservation: dict) -> dict:
     return inventory.release(reservation["reservation_id"])
 
 
-@app.step(retry=ogha.RetryPolicy(max_attempts=5), timeout=30, pivot=True)
+@app.step(retry=aga.RetryPolicy(max_attempts=5), timeout=30, pivot=True)
 def charge_customer(order: dict, amount: int) -> dict:
     return payments.charge(
         customer_id=order["customer_id"],
@@ -35,7 +35,7 @@ def charge_customer(order: dict, amount: int) -> dict:
     )
 
 
-@app.step(retry=ogha.RetryPolicy(max_attempts=3), timeout=15)
+@app.step(retry=aga.RetryPolicy(max_attempts=3), timeout=15)
 def send_receipt(order: dict, charge: dict) -> dict:
     return mailer.send(
         to=order["email"],
@@ -54,7 +54,7 @@ async def checkout(order: dict) -> dict:
     reservation = await reserve_inventory(order)
     charge = await charge_customer(order, validated["total"])
     receipt = await send_receipt(order, charge)
-    ogha.event("CheckoutCompleted", {"order_id": order["id"], "charge": charge["charge_id"]})
+    aga.event("CheckoutCompleted", {"order_id": order["id"], "charge": charge["charge_id"]})
     return {
         "order_id": order["id"],
         "total": validated["total"],

@@ -1,4 +1,4 @@
-import ogha
+import aga_runtime as aga
 import pytest
 
 from quickstart.sync_client import example_order, run_checkout_sync
@@ -48,7 +48,7 @@ def test_sync_client_starts_once_and_returns_the_typed_result(monkeypatch):
 
 def test_sync_client_surfaces_a_terminal_workflow_failure(monkeypatch):
     order = example_order(100, order_id="sync-order-failed")
-    run = RecordingRun("sync-order-failed", error=ogha.OghaError("payment declined"))
+    run = RecordingRun("sync-order-failed", error=aga.AgaError("payment declined"))
     configured = object()
 
     monkeypatch.setattr(
@@ -56,5 +56,5 @@ def test_sync_client_surfaces_a_terminal_workflow_failure(monkeypatch):
     )
     monkeypatch.setattr("quickstart.sync_client.app.start", lambda workflow, value: run)
 
-    with pytest.raises(ogha.OghaError, match="payment declined"):
+    with pytest.raises(aga.AgaError, match="payment declined"):
         run_checkout_sync(order)

@@ -1,12 +1,12 @@
 [project]
-name = "ogha-sdk-examples"
+name = "aga-sdk-examples"
 version = "0.1.0"
-description = "Runnable Python examples for every Ogha documentation use case"
+description = "Runnable Python examples for every Aga documentation use case"
 requires-python = ">=3.10"
 readme = "README.md"
 license = "Apache-2.0"
 authors = [{ name = "Vedh Labs" }]
-dependencies = ["ogha>=0.4.0,<0.5"]
+dependencies = ["aga-runtime>=0.4.0,<0.5"]
 
 [project.optional-dependencies]
 alpaca = ["httpx>=0.28"]

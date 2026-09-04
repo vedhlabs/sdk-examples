@@ -19,13 +19,13 @@ def stable_id(prefix: str, key: str) -> str:
 class ExampleStore:
     """Tiny durable stand-in for external providers used by the local examples.
 
-    It is intentionally separate from Ogha's PostgreSQL state. That preserves the
-    real distributed-systems boundary: an Ogha step may be retried after this
+    It is intentionally separate from Aga's PostgreSQL state. That preserves the
+    real distributed-systems boundary: an Aga step may be retried after this
     provider committed, so provider-side idempotency must return the first result.
     """
 
     def __init__(self, path: str | None = None) -> None:
-        configured = path or os.getenv("OGHA_EXAMPLE_STATE", ".state/examples.sqlite3")
+        configured = path or os.getenv("AGA_EXAMPLE_STATE", ".state/examples.sqlite3")
         self.path = Path(configured)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._initialize()

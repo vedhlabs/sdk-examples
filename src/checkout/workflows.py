@@ -1,11 +1,11 @@
-import ogha
+import aga_runtime as aga
 
 from checkout.adapters import payments, shipping
 from checkout.app import app
 
 
 @app.step(
-    retry=ogha.RetryPolicy(max_attempts=5),
+    retry=aga.RetryPolicy(max_attempts=5),
     timeout=30,
     pivot=True,
 )
@@ -17,7 +17,7 @@ def charge_order(order: dict) -> dict:
     )
 
 
-@app.step(retry=ogha.RetryPolicy(max_attempts=5), timeout=30)
+@app.step(retry=aga.RetryPolicy(max_attempts=5), timeout=30)
 def create_shipment(order: dict) -> dict:
     return shipping.create(order=order, idempotency_key=f"order:{order['id']}:shipment")
 

@@ -1,6 +1,6 @@
 # Compact checkout and scheduled report
 
-These packages are the two short examples on the Ogha product page.
+These packages are the two short examples on the Aga product page.
 
 ## Checkout
 

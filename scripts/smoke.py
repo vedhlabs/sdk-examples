@@ -10,11 +10,11 @@ from pathlib import Path
 from typing import Any
 
 SMOKE_ID = uuid.uuid4().hex[:10]
-os.environ.setdefault("OGHA_NAMESPACE", f"sdk-examples-smoke-{SMOKE_ID}")
-os.environ.setdefault("OGHA_EXAMPLE_STATE", f".state/smoke-{SMOKE_ID}.sqlite3")
+os.environ.setdefault("AGA_NAMESPACE", f"sdk-examples-smoke-{SMOKE_ID}")
+os.environ.setdefault("AGA_EXAMPLE_STATE", f".state/smoke-{SMOKE_ID}.sqlite3")
 os.environ.setdefault("TRADING_BROKER", "mock")
 
-import ogha  # noqa: E402
+import aga_runtime as aga  # noqa: E402
 
 from checkout.app import app as checkout_app  # noqa: E402
 from checkout.workflows import checkout as compact_checkout  # noqa: E402
@@ -48,13 +48,13 @@ WORKERS = (
 )
 
 
-def terminal(run: ogha.Handle[Any], timeout_s: float = 45) -> Any:
+def terminal(run: aga.Handle[Any], timeout_s: float = 45) -> Any:
     return run.result(timeout=timeout_s)
 
 
 def submit(
-    app: ogha.App, workflow: Any, value: Any, prefix: str
-) -> ogha.Handle[Any]:
+    app: aga.App, workflow: Any, value: Any, prefix: str
+) -> aga.Handle[Any]:
     run_id = f"{prefix}-{SMOKE_ID}-{uuid.uuid4().hex[:6]}"
     return app.start(workflow.options(run_id=run_id), value)
 
@@ -182,7 +182,7 @@ def run_checks() -> None:
 def main() -> None:
     processes: list[subprocess.Popen] = []
     logs: list[object] = []
-    with tempfile.TemporaryDirectory(prefix="ogha-sdk-smoke-") as log_dir:
+    with tempfile.TemporaryDirectory(prefix="aga-sdk-smoke-") as log_dir:
         try:
             for module in WORKERS:
                 log = open(Path(log_dir) / f"{module}.log", "w+", encoding="utf-8")
@@ -201,7 +201,7 @@ def main() -> None:
                 if process.poll() is not None:
                     raise RuntimeError(f"worker {module} exited with {process.returncode}")
             run_checks()
-            print(f"smoke passed in namespace {os.environ['OGHA_NAMESPACE']}")
+            print(f"smoke passed in namespace {os.environ['AGA_NAMESPACE']}")
         except Exception:
             for module, process, log in zip(WORKERS, processes, logs, strict=True):
                 log.flush()

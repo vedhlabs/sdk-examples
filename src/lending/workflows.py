@@ -1,4 +1,4 @@
-import ogha
+import aga_runtime as aga
 
 from lending.app import app
 from lending.stages import run_disbursement, run_kyc, run_underwriting
@@ -40,7 +40,7 @@ async def disbursement(request: dict) -> dict:
 async def application(request: dict) -> dict:
     applicant = request["applicant"]
     amount = int(request["amount"])
-    ogha.event("ApplicationReceived", {"id": applicant["id"], "amount": amount})
+    aga.event("ApplicationReceived", {"id": applicant["id"], "amount": amount})
 
     kyc_result = await run_kyc(applicant)
     if not kyc_result["passed"]:
@@ -56,20 +56,20 @@ async def application(request: dict) -> dict:
 
     if underwriting_result["decision"] == "needs_review":
         try:
-            approval = await ogha.signal(
-                ogha.Approval(
+            approval = await aga.signal(
+                aga.Approval(
                     "manual_underwriting",
                     {"applicant": applicant["id"], "amount": amount},
                 ),
                 timeout=120,
             )
-        except ogha.PermissionDenied:
+        except aga.PermissionDenied:
             return {"status": "rejected", "stage": "approval", "reason": "not answered"}
         if not approval.get("approved"):
             return {"status": "rejected", "stage": "approval", "reason": "denied"}
 
     disbursement_result = await run_disbursement(applicant, amount)
-    ogha.event("Disbursed", {"txn": disbursement_result["txn_id"], "amount": amount})
+    aga.event("Disbursed", {"txn": disbursement_result["txn_id"], "amount": amount})
     return {
         "status": "disbursed",
         "applicant": applicant["id"],
@@ -97,5 +97,5 @@ async def month_end(request: dict) -> dict:
         )
         for borrower in borrowers
     ]
-    ogha.event("MonthEndStarted", {"count": len(children), "period": period})
+    aga.event("MonthEndStarted", {"count": len(children), "period": period})
     return {"started": len(children), "run_ids": [child.id for child in children]}

@@ -25,7 +25,7 @@ def run_checkout_sync(
     """Start a durable run and block this caller until that run is terminal.
 
     Waiting does not execute the workflow in this process and does not create a
-    third Ogha execution mode. The worker still uses the workflow's declared
+    third Aga execution mode. The worker still uses the workflow's declared
     async or async-distributed placement, and the run survives if this
     caller disconnects.
     """

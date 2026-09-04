@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import time
 
-from ogha.client import Client
-from ogha.protocol.wire import PromiseState
+from aga_runtime.client import Client
+from aga_runtime.protocol.wire import PromiseState
 
 
 def pending_promise(client: Client, run_id: str, label: str, timeout_s: float = 10.0):

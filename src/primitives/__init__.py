@@ -1,1 +1,1 @@
-"""Executable tour of Ogha's compact App authoring surface."""
+"""Executable tour of Aga's compact App authoring surface."""
