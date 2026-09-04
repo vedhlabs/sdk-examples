@@ -4,7 +4,6 @@ import argparse
 import json
 import uuid
 
-from agentic.app import app
 from agentic.types import Ticket
 from agentic.workflows import resolve_ticket
 
@@ -19,7 +18,7 @@ def main() -> None:
     args = parser.parse_args()
 
     ticket = Ticket(args.ticket_id, args.customer, args.message, args.refund)
-    run = app.start(resolve_ticket.options(run_id=args.ticket_id), ticket)
+    run = resolve_ticket.options(run_id=args.ticket_id).start(ticket)
     print(json.dumps({"run_id": run.id, "state": "submitted"}, sort_keys=True))
     if args.wait:
         print(json.dumps(run.result(timeout=120).__dict__, sort_keys=True))

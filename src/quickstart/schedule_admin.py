@@ -37,7 +37,7 @@ def main() -> None:
         schedule=current.cron,
         revision=current.revision + 1,
         target=tags.get("ogha:target", "python://quickstart"),
-        context=current.param,
+        input=current.param,
         timeout_ms=current.timeout_ms,
         paused=args.command == "pause",
         overlap=current.overlap,

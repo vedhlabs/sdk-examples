@@ -1,4 +1,8 @@
-# Agentic AI: one honest durable boundary
+# Deferred agent research: one bounded experiment
+
+This credential-free example is retained as research evidence for a future
+milestone. Agent integration is not part of the current Ogha release story, and
+this example does not claim durable-native model or tool execution.
 
 This package shows the first implemented integration level: an existing agent is
 registered as one explicitly **opaque** Ogha step. The example uses a scripted

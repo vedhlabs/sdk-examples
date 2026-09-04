@@ -52,9 +52,10 @@ flowchart TD
 ```
 
 The quote fan-out is genuinely distributed because the workflow declares
-`execution="async_distributed"`. After two replies, `Handle.settled` identifies the unfinished
-call locally and `ogha.cancel` rejects it. Calls are eager, so all three durable promises exist
-before the workflow awaits the quorum.
+`execution="async_distributed"`. After two replies, the durable winner identities determine every
+nonwinner, and `ogha.cancel` rejects each nonwinner idempotently on every replay. The workflow does
+not infer winners from process-local `Handle.settled` state. Calls are eager, so all three durable
+promises exist before the workflow awaits the quorum.
 
 ## Source map
 

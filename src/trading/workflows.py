@@ -130,10 +130,10 @@ async def trading_rebalance(request: dict) -> dict:
     }
 
 
-@ogha.scheduled(
+@app.schedule(
     "0 12 * * 1-5",
     schedule_id="trading.rebalance-day",
-    context={"portfolios": ["growth", "income"]},
+    input={"portfolios": ["growth", "income"]},
     overlap=ogha.OVERLAP_SKIP,
     revision=1,
 )

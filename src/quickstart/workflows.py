@@ -47,7 +47,7 @@ def send_receipt(order: dict, charge: dict) -> dict:
 @app.workflow(
     name="quickstart.checkout",
     version="1",
-    execution="async_sticky",
+    execution="async",
 )
 async def checkout(order: dict) -> dict:
     validated = await validate_order(order)

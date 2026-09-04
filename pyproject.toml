@@ -6,9 +6,7 @@ requires-python = ">=3.10"
 readme = "README.md"
 license = "Apache-2.0"
 authors = [{ name = "Vedh Labs" }]
-dependencies = [
-  "ogha @ git+ssh://git@github.com/vedhlabs/sdk-python.git@9a6972cf506e5562a409af0b250ed034027ec29e",
-]
+dependencies = ["ogha==0.3.0"]
 
 [project.optional-dependencies]
 alpaca = ["httpx>=0.28"]

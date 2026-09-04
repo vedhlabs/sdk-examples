@@ -2,7 +2,6 @@ import argparse
 import json
 import uuid
 
-from quickstart.app import app
 from quickstart.sync_client import run_checkout_sync
 from quickstart.workflows import checkout
 
@@ -25,12 +24,12 @@ def main() -> None:
         "items": [{"sku": "starter-kit", "price": args.amount, "qty": 1}],
     }
     if args.wait:
-        run_id, output = run_checkout_sync(order, timeout_s=30)
+        run_id, output = run_checkout_sync(order)
         print(run_id)
         print(json.dumps(output, indent=2, sort_keys=True))
         return
 
-    run = app.start(checkout.options(run_id=order_id), order)
+    run = checkout.options(run_id=order_id).start(order)
     print(run.id)
 
 

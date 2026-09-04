@@ -56,13 +56,15 @@ def submit(
     app: ogha.App, workflow: Any, value: Any, prefix: str
 ) -> ogha.RunHandle[Any]:
     run_id = f"{prefix}-{SMOKE_ID}-{uuid.uuid4().hex[:6]}"
-    return app.start(workflow.options(run_id=run_id), value)
+    return workflow.options(run_id=run_id).start(value)
 
 
 def run_checks() -> None:
     base = quickstart_app.client
     base.hello()
 
+    # Retained only as regression evidence for the deferred, opaque adapter
+    # experiment. It is not part of the active product story.
     agentic = agentic_app.client
     agentic_run = submit(
         agentic_app,
@@ -96,7 +98,6 @@ def run_checks() -> None:
 
     sync_run_id, sync_result = run_checkout_sync(
         example_order(175, order_id=f"QS-SYNC-{SMOKE_ID}"),
-        timeout_s=30,
     )
     assert sync_run_id == f"QS-SYNC-{SMOKE_ID}"
     assert sync_result["total"] == 175

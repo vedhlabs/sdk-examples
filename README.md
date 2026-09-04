@@ -15,7 +15,7 @@ git clone https://github.com/vedhlabs/sdk-examples.git
 cd sdk-examples
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[dev]"  # pins the verified App-facade SDK commit
+python -m pip install -e ".[dev]"  # installs the breaking context-free SDK 0.3.0
 docker compose up -d
 ```
 
@@ -31,8 +31,10 @@ python -m quickstart.sync_client
 ```
 
 The `quickstart.app` object owns registration, the engine connection, and the worker lifecycle.
-The synchronous caller uses `app.start(checkout, order).result()` and receives an ordinary Python
-value. The run still executes durably in the worker and survives if the caller disconnects.
+The synchronous caller uses `checkout.options(run_id=order["id"]).run(order)` (or
+`checkout.options(run_id=order["id"]).start(order).result(...)` for custom wait settings) and
+receives an ordinary Python value. The run still executes durably in the worker and survives if
+the caller disconnects.
 
 ## The durable-promise mental model
 
@@ -46,9 +48,17 @@ committed may retry; task leases and fencing reject stale workers; durable waits
 wake-up registration; and an external payment or email still needs provider idempotency or
 reconciliation.
 
-## Client waiting is not an execution mode
+## Sync, Async, and Async Distributed
 
-Use the client style that matches the request boundary:
+These are three user experiences over two independent choices:
+
+| Experience | Example | What changes |
+| :--- | :--- | :--- |
+| **Sync** | `checkout.options(run_id=order["id"]).run(order)` | The caller waits for the typed result. |
+| **Async** | `checkout.options(run_id=order["id"]).start(order)` | The caller receives a durable `RunHandle` immediately; placement defaults to sticky. |
+| **Async Distributed** | `distributed_checkout.options(run_id=order["id"]).start(order)` | The caller receives a `RunHandle`; the workflow declares `execution="async_distributed"`, so steps dispatch independently. |
+
+Try the first two against the same quickstart workflow:
 
 ```bash
 # Background/API submission: print the run ID and return immediately.
@@ -62,8 +72,14 @@ python -m quickstart.submit --wait
 ```
 
 All three commands submit the same durable `quickstart.checkout` workflow. “Synchronous” only means
-the caller waits. Worker placement remains `async_sticky` or `async_distributed`; there is no
-`execution="sync"` workflow mode.
+the caller waits. Public workflow placement is `async` (the sticky default) or
+`async_distributed`; there is no `execution="sync"` workflow mode. Ecommerce, lending,
+primitives, and trading demonstrate distributed placement.
+
+> **Breaking SDK.** These examples require `ogha==0.3.0`. The explicit Context, global workflow
+> decorators, manual Worker authoring surface, and public `async_sticky` spelling were removed.
+> Existing deployments must send 0.3 Runs to a new target or workflow name and drain the old worker
+> fleet; workers do not yet route definitions by `(workflow, version)`.
 
 ## Examples
 
@@ -75,7 +91,7 @@ the caller waits. Worker placement remains `async_sticky` or `async_distributed`
 | [Lending](docs/lending.md)                | `lending`             | composed stages, KYC, bureau quorum, approval, disbursement, spawn                                      |
 | [Trading](docs/trading.md)                | `trading`             | scheduled rebalance, drift, risk, approval, order identity, reconciliation                              |
 | [Compact App surface](docs/primitives.md) | `primitives`          | direct calls, remote calls, child workflows, gather/race/quorum, sleep, signal, approval, event, cancel |
-| [Agentic AI](docs/agentic.md)             | `agentic`             | adapter-owned config, fail-fast App installation, typed opaque agent call, approval                     |
+| [Deferred agent research](docs/agentic.md) | `agentic`            | bounded opaque-adapter experiment retained for future research, not the active product story            |
 
 Use `python -m <package>.<command> --help` for command options. All examples read:
 

@@ -1,7 +1,6 @@
 import argparse
 from datetime import date
 
-from trading.app import app
 from trading.workflows import trading_rebalance
 
 
@@ -12,8 +11,7 @@ def main() -> None:
     args = parser.parse_args()
 
     run_id = f"{args.date}-{args.portfolio}"
-    run = app.start(
-        trading_rebalance.options(run_id=run_id),
+    run = trading_rebalance.options(run_id=run_id).start(
         {"portfolio": args.portfolio, "run_id": run_id},
     )
     print(run.id)

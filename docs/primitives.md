@@ -1,7 +1,7 @@
 # The compact App surface, running together
 
-`primitives.tour` deliberately exercises the ordinary context-free workflow surface in one short
-run. The compatibility `Context` still exists internally, but application code does not pass it.
+`primitives.tour` deliberately exercises the ordinary App-owned workflow surface in one short run.
+Application code uses durable function objects and control helpers directly.
 
 | Method | Line of business meaning in this tour |
 | :--- | :--- |

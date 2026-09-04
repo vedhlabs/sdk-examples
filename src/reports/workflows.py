@@ -14,10 +14,10 @@ def render_report(report: str, occurrence: str) -> dict:
     )
 
 
-@ogha.scheduled(
+@app.schedule(
     "0 6 * * *",
     schedule_id="reports.daily-kpis",
-    context={"report": "daily-kpis"},
+    input={"report": "daily-kpis"},
     overlap=ogha.OVERLAP_SKIP,
     revision=1,
 )
