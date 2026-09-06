@@ -144,11 +144,11 @@ def run_checks(*, supports_schedules: bool) -> None:
         ),
         {"order_id": family_order_id},
     )
-    family_result = terminal(family_run)
-    assert {branch["branch"] for branch in family_result["fulfilment"]["branches"]} == {
-        "inventory",
-        "shipping",
-    }
+    family_result = terminal(family_run, timeout_s=90)
+    assert len(family_result["stages"]) == 4
+    assert len(family_result["child"]["stages"]) == 3
+    assert len(family_result["child"]["fulfilment"]["stages"]) == 4
+    assert len(family_result["child"]["fulfilment"]["final"]["stages"]) == 3
 
     trading = connect_trading()
     trading_run = submit(

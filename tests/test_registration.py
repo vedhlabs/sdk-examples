@@ -8,7 +8,13 @@ from ecommerce.workflow import checkout as ecommerce_checkout
 from lending.app import app as lending_app
 from lending.workflows import application, month_end, statement
 from primitives.app import app as primitives_app
-from primitives.family import family_child, family_leaf, family_root
+from primitives.family import (
+    family_finalize,
+    family_fulfilment,
+    family_loop,
+    family_root,
+    family_stage,
+)
 from primitives.methods import methods_tour, risk_score
 from quickstart.app import app as quickstart_app
 from quickstart.schedules import daily_report
@@ -33,8 +39,9 @@ def test_documented_workflow_names_and_targets_are_registered():
         rebalance_day: ("trading.rebalance-day", "python://trading"),
         methods_tour: ("primitives.tour", "python://primitives"),
         family_root: ("primitives.family.root", "python://primitives"),
-        family_child: ("primitives.family.child", "python://primitives"),
-        family_leaf: ("primitives.family.leaf", "python://primitives"),
+        family_loop: ("primitives.family.loop", "python://primitives"),
+        family_fulfilment: ("primitives.family.fulfilment", "python://primitives"),
+        family_finalize: ("primitives.family.finalize", "python://primitives"),
     }
     for function, (name, target) in expected.items():
         spec = function.__aga_spec__
@@ -54,8 +61,9 @@ def test_every_example_is_owned_by_one_isolated_app():
             "primitives.tour",
             "primitives.child",
             "primitives.family.root",
-            "primitives.family.child",
-            "primitives.family.leaf",
+            "primitives.family.loop",
+            "primitives.family.fulfilment",
+            "primitives.family.finalize",
         },
     }
     for app, expected in apps.items():
@@ -75,8 +83,10 @@ def test_execution_family_keeps_one_root_resource_declaration():
     configured = family_root.options(run_id="family-order-42", resource=resource)
 
     assert configured._options.resource == resource
-    assert family_child._options.resource is None
-    assert family_leaf._options.resource is None
+    assert family_loop._options.resource is None
+    assert family_fulfilment._options.resource is None
+    assert family_finalize._options.resource is None
+    assert family_stage._options.name is None
 
 
 def test_schedules_and_rpc_method_are_declared():
