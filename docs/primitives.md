@@ -48,3 +48,19 @@ sequenceDiagram
 ```
 
 Canonical source: [`src/primitives/methods.py`](../src/primitives/methods.py).
+
+## Trace one nested execution family
+
+`primitives.family.root` records one typed `order` resource, starts an owned
+child, and that child starts two grandchildren before joining them. The resource
+is declared once on the root and inherited automatically by all four Runs.
+
+```bash
+python -m primitives.family_submit --order-id ORDER-42 --wait
+```
+
+Open any one of the four Runs in the dashboard to see the same retained family
+view and select a node to load its recorded input and output. Searching for
+`resource:order/ORDER-42` finds the family without scanning input JSON.
+
+Canonical source: [`src/primitives/family.py`](../src/primitives/family.py).

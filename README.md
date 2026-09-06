@@ -21,8 +21,8 @@ python -m pip install -e ".[dev]" --no-deps
 docker compose up -d
 ```
 
-The Compose project builds the current sibling Aga engine locally. It does not
-depend on an unpublished container tag.
+The Compose project builds the current sibling Aga engine from source instead of
+pulling a registry image.
 
 Open [http://localhost:8080](http://localhost:8080) for the Aga dashboard. Then run the
 quickstart in two terminals:
@@ -86,10 +86,11 @@ uses the active execution scope to distinguish a root from an owned child; an un
 child is joined automatically. Use immutable `workflow.options(detached=True)` only when that
 child must outlive its parent.
 
-> **Breaking SDK candidate.** These examples target the unpublished Python 0.4 candidate. It removes
+> **Breaking SDK candidate.** These examples target Python SDK 0.4. It removes
 > 0.3 aliases such as bare decorators, `.run()`, direct child Workflow calls, `.detach()`,
 > `gather/race/quorum`, `approval()`, and `scheduled_time()`. Install the sibling SDK checkout as
-> shown above. Do not mix 0.3 and 0.4 workers on a target with active Runs.
+> shown above. A target or Workflow name is not a compatibility fence: complete the database-wide
+> hard cutover and stop all 0.3 servers and workers before 0.4 accepts work.
 
 ## Examples
 
@@ -100,7 +101,7 @@ child must outlive its parent.
 | [Order workflow](docs/ecommerce.md)       | `ecommerce`           | fan-out, quorum, cancel, approval, webhook signal, sleep, event                                         |
 | [Lending](docs/lending.md)                | `lending`             | composed stages, KYC, bureau quorum, approval, disbursement, detached child Runs                         |
 | [Trading](docs/trading.md)                | `trading`             | scheduled rebalance, drift, risk, approval, order identity, reconciliation                              |
-| [Compact App surface](docs/primitives.md) | `primitives`          | direct calls, remote calls, child workflows, join, sleep, signal, approval policy, event, cancel         |
+| [Compact App surface](docs/primitives.md) | `primitives`          | direct calls, controls, and a resource-linked root → child → parallel-grandchildren execution family    |
 
 Use `python -m <package>.<command> --help` for command options. All examples read:
 

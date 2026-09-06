@@ -8,6 +8,7 @@ from ecommerce.workflow import checkout as ecommerce_checkout
 from lending.app import app as lending_app
 from lending.workflows import application, month_end, statement
 from primitives.app import app as primitives_app
+from primitives.family import family_child, family_leaf, family_root
 from primitives.methods import methods_tour, risk_score
 from quickstart.app import app as quickstart_app
 from quickstart.schedules import daily_report
@@ -31,6 +32,9 @@ def test_documented_workflow_names_and_targets_are_registered():
         trading_rebalance: ("trading.rebalance", "python://trading"),
         rebalance_day: ("trading.rebalance-day", "python://trading"),
         methods_tour: ("primitives.tour", "python://primitives"),
+        family_root: ("primitives.family.root", "python://primitives"),
+        family_child: ("primitives.family.child", "python://primitives"),
+        family_leaf: ("primitives.family.leaf", "python://primitives"),
     }
     for function, (name, target) in expected.items():
         spec = function.__aga_spec__
@@ -46,7 +50,13 @@ def test_every_example_is_owned_by_one_isolated_app():
         ecommerce_app: {"ecommerce.checkout"},
         lending_app: {"lending.application", "lending.statement", "lending.month_end"},
         trading_app: {"trading.rebalance", "trading.rebalance-day"},
-        primitives_app: {"primitives.tour", "primitives.child"},
+        primitives_app: {
+            "primitives.tour",
+            "primitives.child",
+            "primitives.family.root",
+            "primitives.family.child",
+            "primitives.family.leaf",
+        },
     }
     for app, expected in apps.items():
         assert expected <= set(app._catalog.workflows)
@@ -58,6 +68,15 @@ def test_fanout_workflows_are_distributed():
     assert application.__aga_spec__.execution == "async_distributed"
     assert trading_rebalance.__aga_spec__.execution == "async_distributed"
     assert methods_tour.__aga_spec__.execution == "async_distributed"
+
+
+def test_execution_family_keeps_one_root_resource_declaration():
+    resource = aga.ResourceRef("order", "ORDER-42")
+    configured = family_root.options(run_id="family-order-42", resource=resource)
+
+    assert configured._options.resource == resource
+    assert family_child._options.resource is None
+    assert family_leaf._options.resource is None
 
 
 def test_schedules_and_rpc_method_are_declared():

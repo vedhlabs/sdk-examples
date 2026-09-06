@@ -1,4 +1,4 @@
-from primitives import methods  # noqa: F401
+from primitives import family, methods  # noqa: F401
 from primitives.app import app
 
 

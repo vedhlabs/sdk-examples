@@ -31,6 +31,7 @@ services:
       - --storage=postgres
       - --dsn=postgres://aga:aga-local@postgres:5432/aga?sslmode=disable
       - --auth-disabled
+      - --lineage-v3-enabled
       - --addr=0.0.0.0:8080
     ports:
       - "8080:8080"

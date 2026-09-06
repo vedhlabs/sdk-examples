@@ -28,6 +28,7 @@ from lending.app import app as lending_app  # noqa: E402
 from lending.workflows import application as lending_application  # noqa: E402
 from primitives.app import app as primitives_app  # noqa: E402
 from primitives.client import connect as connect_primitives  # noqa: E402
+from primitives.family import family_root  # noqa: E402
 from primitives.methods import methods_tour  # noqa: E402
 from quickstart.app import app as quickstart_app  # noqa: E402
 from quickstart.client import connect as connect_quickstart  # noqa: E402
@@ -134,6 +135,20 @@ def run_checks(*, supports_schedules: bool) -> None:
     gate = pending_promise(primitives, primitives_run.id, "manual_approval", timeout_s=20)
     primitives.resolve(gate.id, b'{"approved":true,"reviewer":"smoke"}')
     assert terminal(primitives_run)["risk"]["band"] == "low"
+
+    family_order_id = f"FAMILY-{SMOKE_ID}"
+    family_run = primitives_app.start(
+        family_root.options(
+            run_id=f"family-{SMOKE_ID}",
+            resource=aga.ResourceRef("order", family_order_id),
+        ),
+        {"order_id": family_order_id},
+    )
+    family_result = terminal(family_run)
+    assert {branch["branch"] for branch in family_result["fulfilment"]["branches"]} == {
+        "inventory",
+        "shipping",
+    }
 
     trading = connect_trading()
     trading_run = submit(
