@@ -1,4 +1,4 @@
-.PHONY: install engine engine-down test lint check smoke clean-state
+.PHONY: install engine engine-down test lint check smoke smoke-first clean-state
 
 install:
 	python -m pip install -e ".[dev,alpaca]"
@@ -20,6 +20,8 @@ check: lint test
 smoke:
 	python scripts/smoke.py
 
+smoke-first:
+	python scripts/smoke_first_workflow.py
+
 clean-state:
 	rm -rf .state audit.log
-

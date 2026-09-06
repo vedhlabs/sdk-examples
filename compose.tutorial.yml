@@ -1,0 +1,31 @@
+# Released images only. Local learning environment, not a production deployment.
+name: aga-first-workflow
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: aga
+      POSTGRES_PASSWORD: aga-local
+      POSTGRES_DB: aga
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aga -d aga"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - tutorial-postgres:/var/lib/postgresql/data
+  aga:
+    image: public.ecr.aws/h6s8i3h8/aga:0.2.0-obf
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - --storage=postgres
+      - --dsn=postgres://aga:aga-local@postgres:5432/aga?sslmode=disable
+      - --auth-disabled
+      - --lineage-v3-enabled
+      - --addr=0.0.0.0:8080
+    ports:
+      - "127.0.0.1:${AGA_TUTORIAL_PORT:-8080}:8080"
+volumes:
+  tutorial-postgres:

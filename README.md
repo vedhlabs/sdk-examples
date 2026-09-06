@@ -8,6 +8,13 @@ required.
 
 ## Start here
 
+New to Aga? Start with [your first workflow](docs/first-workflow.md): one file,
+two steps, and a local server downloaded as a released image. The tutorial uses
+Python 3.11, Git, and Docker with Compose—no private-module token or sibling checkout.
+The [Python guide](https://coding2fun.in/aga/python) explains that exact source.
+
+## Build the development stack (contributors)
+
 Requirements: Python 3.10+, Docker with Compose, a sibling `aga` checkout, and a
 `GITHUB_TOKEN` that can read the private Aga Go modules.
 
@@ -95,6 +102,7 @@ child must outlive its parent.
 
 | Guide                                     | Package               | What it demonstrates                                                                                    |
 | :---------------------------------------- | :-------------------- | :------------------------------------------------------------------------------------------------------ |
+| [First workflow](docs/first-workflow.md) | `quickstart.first_workflow` | one complete file, two sequential steps, worker and caller setup |
 | [Quickstart](docs/quickstart.md)          | `quickstart`          | sync waiting, async submit, workflow placement, crash recovery, schedules                               |
 | [Checkout and reports](docs/checkout.md)  | `checkout`, `reports` | provider idempotency, compensation shape, engine cron                                                   |
 | [Order workflow](docs/ecommerce.md)       | `ecommerce`           | fan-out, quorum, cancel, approval, webhook signal, sleep, event                                         |

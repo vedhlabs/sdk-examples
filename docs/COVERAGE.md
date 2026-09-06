@@ -6,7 +6,7 @@ Python lives here. Every real source-file label in the six Aga pages links to a 
 | Public page    | Runnable packages                     | Verification                                                                                |
 | :------------- | :------------------------------------ | :------------------------------------------------------------------------------------------ |
 | Product page   | `checkout`, `reports`                 | import tests, provider idempotency tests, schedule registration                             |
-| Python SDK     | `quickstart`, `primitives`            | sync/async callers, compact controls, unit tests, and end-to-end smoke                     |
+| Python SDK     | `quickstart`, `primitives`            | first_workflow.py and checkout_app.py are full-page examples; unit tests, source parity, live execution |
 | Use-case index | all guides                            | path coverage test                                                                          |
 | Order workflow | `ecommerce`                           | domain adapter tests and smoke with webhook resolution                                      |
 | Lending        | `lending`                             | decision tests and smoke through automatic approval                                         |

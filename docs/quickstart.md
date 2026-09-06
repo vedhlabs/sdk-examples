@@ -1,5 +1,9 @@
 # Quickstart, synchronous waiting, crash recovery, and schedules
 
+If this is your first Aga run, begin with [your first workflow](first-workflow.md).
+It needs no provider adapters and uses the released server image. Return here
+when you want to exercise recovery and schedules.
+
 This guide backs the Python SDK page. It starts with one checkout and then exposes the two cases
 that are easy to describe but important to see: a process dying in the middle of a step, and a cron
 schedule that belongs to the engine rather than the worker.

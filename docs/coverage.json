@@ -7,6 +7,11 @@
     "src/reports/workflows.py"
   ],
   "src/pages/aga/python.md": [
+    "compose.tutorial.yml",
+    "docs/first-workflow.md",
+    "src/quickstart/first_workflow.py",
+    "src/quickstart/checkout_app.py",
+    "scripts/check_sdk_guide.py",
     "compose.yml",
     "src/quickstart/app.py",
     "src/quickstart/workflows.py",
