@@ -8,16 +8,15 @@ required.
 
 ## Start here
 
-Requirements: Python 3.10+, Docker with Compose, sibling `aga` and `sdk-python`
-checkouts, and a `GITHUB_TOKEN` that can read the private Aga Go modules.
+Requirements: Python 3.10+, Docker with Compose, a sibling `aga` checkout, and a
+`GITHUB_TOKEN` that can read the private Aga Go modules.
 
 ```bash
 git clone https://github.com/vedhlabs/sdk-examples.git
 cd sdk-examples
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ../sdk-python
-python -m pip install -e ".[dev]" --no-deps
+python -m pip install -e ".[dev]"
 docker compose up -d
 ```
 
@@ -86,10 +85,10 @@ uses the active execution scope to distinguish a root from an owned child; an un
 child is joined automatically. Use immutable `workflow.options(detached=True)` only when that
 child must outlive its parent.
 
-> **Breaking SDK candidate.** These examples target Python SDK 0.4. It removes
+> **Breaking SDK release.** These examples target `aga-runtime` 0.4. It removes
 > 0.3 aliases such as bare decorators, `.run()`, direct child Workflow calls, `.detach()`,
-> `gather/race/quorum`, `approval()`, and `scheduled_time()`. Install the sibling SDK checkout as
-> shown above. A target or Workflow name is not a compatibility fence: complete the database-wide
+> `gather/race/quorum`, `approval()`, and `scheduled_time()`. A target or Workflow name is not a
+> compatibility fence: complete the database-wide
 > hard cutover and stop all 0.3 servers and workers before 0.4 accepts work.
 
 ## Examples
