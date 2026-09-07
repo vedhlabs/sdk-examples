@@ -103,6 +103,7 @@ child must outlive its parent.
 | Guide                                     | Package               | What it demonstrates                                                                                    |
 | :---------------------------------------- | :-------------------- | :------------------------------------------------------------------------------------------------------ |
 | [First workflow](docs/first-workflow.md) | `quickstart.first_workflow` | one complete file, two sequential steps, worker and caller setup |
+| [Two tasks and worker capacity](docs/parallel-tasks.md) | `quickstart.parallel_tasks` | SDK 0.4.1: concurrent sticky/distributed tasks, both caller styles, and worker capacity |
 | [Quickstart](docs/quickstart.md)          | `quickstart`          | sync waiting, async submit, workflow placement, crash recovery, schedules                               |
 | [Checkout and reports](docs/checkout.md)  | `checkout`, `reports` | provider idempotency, compensation shape, engine cron                                                   |
 | [Order workflow](docs/ecommerce.md)       | `ecommerce`           | fan-out, quorum, cancel, approval, webhook signal, sleep, event                                         |

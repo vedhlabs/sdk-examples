@@ -1,4 +1,5 @@
 import argparse
+import time
 
 import aga_runtime as aga
 
@@ -9,11 +10,13 @@ app = aga.App("first-workflow")
 def calculate_total(prices: list[int]) -> int:
     if not prices or any(price < 0 for price in prices):
         raise ValueError("Provide at least one price, with no negative amounts")
+    time.sleep(2)
     return sum(prices)
 
 
 @app.step()
 def make_summary(total: int) -> str:
+    time.sleep(1)
     return f"Order total: {total} cents"
 
 

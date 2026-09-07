@@ -6,7 +6,7 @@ requires-python = ">=3.10"
 readme = "README.md"
 license = "Apache-2.0"
 authors = [{ name = "Vedh Labs" }]
-dependencies = ["aga-runtime>=0.4.0,<0.5"]
+dependencies = ["aga-runtime>=0.4.1,<0.5"]
 
 [project.optional-dependencies]
 alpaca = ["httpx>=0.28"]

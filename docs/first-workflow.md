@@ -12,6 +12,7 @@ Canonical source: [first_workflow.py](../src/quickstart/first_workflow.py).
 
 ```python
 import argparse
+import time
 
 import aga_runtime as aga
 
@@ -22,11 +23,13 @@ app = aga.App("first-workflow")
 def calculate_total(prices: list[int]) -> int:
     if not prices or any(price < 0 for price in prices):
         raise ValueError("Provide at least one price, with no negative amounts")
+    time.sleep(2)
     return sum(prices)
 
 
 @app.step()
 def make_summary(total: int) -> str:
+    time.sleep(1)
     return f"Order total: {total} cents"
 
 
@@ -57,6 +60,10 @@ if __name__ == "__main__":
 
 ### Install the example
 
+The two-second and one-second pauses above only simulate slow service work.
+They block inside these demo steps; use `aga.sleep` for a durable workflow wait
+that releases worker capacity.
+
 You'll need Python 3.11, Git, and Docker with Compose running. Check with
 `python3.11 --version` before starting (or use your newer Python interpreter).
 The commands below use macOS or Linux. On Windows, run them in WSL with Docker
@@ -67,6 +74,7 @@ git clone https://github.com/vedhlabs/sdk-examples.git
 cd sdk-examples
 python3.11 -m venv .venv
 source .venv/bin/activate
+python -m ensurepip --upgrade
 python -m pip install --upgrade pip
 python -m pip install -e .
 docker compose -f compose.tutorial.yml up -d
@@ -74,9 +82,9 @@ docker compose -f compose.tutorial.yml up -d
 
 Stay in the `sdk-examples` directory for the remaining commands. The virtual
 environment keeps the example's Python packages separate from your other projects.
-The install adds both the example modules and the Aga SDK.
+The install adds both the example modules and Aga SDK 0.4.1 or later in the 0.4 line.
 
-This Compose file downloads the released Aga server and starts PostgreSQL for it.
+This Compose file downloads Aga server 0.2.1 and starts PostgreSQL for it.
 It doesn't build source or need a private-module token. Open
 [http://127.0.0.1:8080](http://127.0.0.1:8080) and wait for the dashboard to load
 before starting Python.
@@ -84,6 +92,23 @@ before starting Python.
 This is a **local-only** setup: authentication is disabled, the server port binds
 to your computer's loopback address, and PostgreSQL is not exposed to the host.
 It is not a production deployment recipe.
+
+### Updating an existing example installation
+
+From your `sdk-examples` checkout:
+
+```bash
+git pull --ff-only
+source .venv/bin/activate
+python -m ensurepip --upgrade
+python -m pip install --upgrade -e .
+docker compose -f compose.tutorial.yml pull
+docker compose -f compose.tutorial.yml up -d
+```
+
+Stop old Python workers with Ctrl+C and restart them. The new SDK code only takes
+effect after a worker restart. The server update preserves the database volume;
+don't remove it if you want to keep workflow history.
 
 ### Terminal 1: start a worker
 
@@ -130,6 +155,7 @@ should refer to the same order.
 
 | What you see | What to check |
 | :--- | :--- |
+| `No module named pip` | Run `python -m ensurepip --upgrade`, then `python -m pip install -e .`. If `ensurepip` is unavailable and you have `uv`, use `uv pip install --python .venv/bin/python -e .`. |
 | `No module named quickstart` | Activate this repository's virtual environment and run `python -m pip install -e .`. |
 | Connection refused or no dashboard | Run `docker compose -f compose.tutorial.yml ps`, then `docker compose -f compose.tutorial.yml logs aga`. Docker must be running. |
 | A run ID prints, then the caller times out | Keep Terminal 1 running. Both terminals must use the same URL, namespace, and source file. |
@@ -146,6 +172,9 @@ and its run history. No database deletion is needed.
 
 
 ## What to try next
+
+Try [two tasks and worker capacity](parallel-tasks.md) to compare caller waiting,
+sticky placement and distributed overlap without creating child workflows.
 
 Use [the longer checkout](../src/quickstart/checkout_app.py) to study parallel
 quotes, approval, child workflows, and a schedule. It uses this repository's

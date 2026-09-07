@@ -22,6 +22,17 @@ def check(guide: Path) -> None:
         assert actual == expected, f"Blog code differs from source: {filename}"
         print(f"{filename}: exact source match")
 
+    label = '<div class="code-file"><code>parallel_tasks.py (distributed workflow)</code></div>'
+    assert label in text, "Missing parallel task source label"
+    match = re.search(r"```python\n(.*?)\n```", text.split(label, 1)[1], re.DOTALL)
+    assert match is not None
+    source = (ROOT / "src/quickstart/parallel_tasks.py").read_text()
+    definition = source.split('@app.workflow(execution="async_distributed")', 1)[1]
+    declaration = '@app.workflow(execution="async_distributed")'
+    expected = declaration + definition.split("\n\ndef main", 1)[0]
+    assert match.group(1).strip() == expected.strip(), "Parallel workflow excerpt differs"
+    print("parallel_tasks.py: distributed workflow source match")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)

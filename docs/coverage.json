@@ -9,6 +9,10 @@
   "src/pages/aga/python.md": [
     "compose.tutorial.yml",
     "docs/first-workflow.md",
+    "docs/parallel-tasks.md",
+    "src/quickstart/parallel_tasks.py",
+    "scripts/smoke_parallel_tasks.py",
+    "scripts/smoke_sticky_recovery.py",
     "src/quickstart/first_workflow.py",
     "src/quickstart/checkout_app.py",
     "scripts/check_sdk_guide.py",

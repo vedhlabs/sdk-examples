@@ -15,7 +15,7 @@ services:
     volumes:
       - tutorial-postgres:/var/lib/postgresql/data
   aga:
-    image: public.ecr.aws/h6s8i3h8/aga:0.2.0-obf
+    image: public.ecr.aws/h6s8i3h8/aga:0.2.1-obf
     depends_on:
       postgres:
         condition: service_healthy

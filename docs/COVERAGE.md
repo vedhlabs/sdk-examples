@@ -19,3 +19,7 @@ The quickstart’s `sync_client.py` is deliberately classified as a caller examp
 `app.start(workflow.options(...), ...).result()`: waiting is caller behavior and does not introduce
 an `execution="sync"` workflow declaration. The asynchronous client uses the same `app.start(...)`
 operation and receives a `Handle` immediately.
+
+`parallel_tasks.py` demonstrates the same distinction plus two calls followed by
+one join. SDK 0.4.1 supports actual sticky and distributed overlap in one worker
+process. Its walkthrough uses the published package and checks both caller styles.
