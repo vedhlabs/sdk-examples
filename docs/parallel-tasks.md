@@ -5,11 +5,10 @@ on the other. Start both durable step calls, then join their Handles. These are
 two tasks inside one Run, not two child workflows.
 
 The runnable file is [parallel_tasks.py](../src/quickstart/parallel_tasks.py).
-It uses SDK 0.4.1. If you installed an earlier version, upgrade it and restart
-your Python worker:
+It uses SDK 0.4.2. Install the release and restart your Python worker:
 
 ```bash
-python -m pip install --upgrade "aga-runtime==0.4.1"
+python -m pip install --upgrade "aga-runtime==0.4.2"
 ```
 
 Its two steps simulate service calls with two-second pauses; no external account
@@ -93,7 +92,7 @@ uncommitted effects can repeat and must be safe to retry. Cancellation skips wor
 that has not started but cannot forcibly interrupt a running Python function.
 
 To make work sequential, await the first step before calling the second.
-To wait for all already-started work, use `await aga.join(...)`; its full-join
+To wait for all already-started work, use `await app.join(...)`; its full-join
 results follow the input Handle order. Increasing `concurrency` alone does not
 make a sequential workflow parallel. Unfinished owned work is joined before
 the workflow completes; returning early is not a way to detach a task.

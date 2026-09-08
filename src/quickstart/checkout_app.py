@@ -64,7 +64,7 @@ def create_shipment(order: dict, carrier: str) -> dict:
 
 @app.workflow(name="checkout.audit", version="1")
 async def audit_order(result: dict) -> dict:
-    aga.event("OrderAudited", result)
+    app.event("OrderAudited", result)
     return {"audited": result["order_id"]}
 
 
@@ -78,18 +78,18 @@ async def checkout(order: dict) -> dict:
         carrier: quote_shipping.options(name=f"quote-{carrier}")(order, carrier)
         for carrier in ("ups", "fedex", "dhl")
     }
-    received = await aga.join(*quotes.values(), count=2)
+    received = await app.join(*quotes.values(), count=2)
     winners = {quote["carrier"] for quote in received}
     for carrier, handle in quotes.items():
         if carrier not in winners:
-            aga.cancel(handle, reason="shipping quorum reached")
+            app.cancel(handle, reason="shipping quorum reached")
 
     best = min(received, key=lambda quote: quote["price"])
     total = int(order["total"]) + best["price"]
 
     if total > 5_000:
         risk = await score_risk({"order_id": order["id"], "total": total})
-        approval = await aga.signal(
+        approval = await app.signal(
             aga.Approval("fraud_review", evidence=risk),
             timeout=120,
         )
@@ -101,14 +101,14 @@ async def checkout(order: dict) -> dict:
     shipment = await create_shipment(order, best["carrier"])
 
     if order.get("wait_for_pickup"):
-        await aga.signal("carrier_pickup", timeout=3 * 86_400)
+        await app.signal("carrier_pickup", timeout=3 * 86_400)
 
     result = {
         "order_id": order["id"],
         "charge_id": charge["charge_id"],
         "tracking": shipment["tracking"],
     }
-    aga.event("CheckoutCompleted", result)
+    app.event("CheckoutCompleted", result)
 
     # This child is intentionally independent of checkout completion.
     app.start(
@@ -119,7 +119,7 @@ async def checkout(order: dict) -> dict:
         result,
     )
 
-    await aga.sleep(1)
+    await app.sleep(1)
     return result
 
 
@@ -137,7 +137,7 @@ def reconcile_day(day: str, occurrence: str) -> dict:
 )
 @app.workflow(name="checkout.daily-reconciliation", version="1")
 async def daily_reconciliation(request: dict) -> dict:
-    occurrence = aga.info().scheduled_time
+    occurrence = app.info().scheduled_time
     assert occurrence is not None
     return await reconcile_day(request["day"], occurrence.isoformat())
 

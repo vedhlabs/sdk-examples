@@ -54,22 +54,22 @@ async def methods_tour(request: dict) -> dict:
         )
         for provider in ("fast", "slow")
     }
-    first_quote = (await aga.join(*quotes.values(), count=1))[0]
+    first_quote = (await app.join(*quotes.values(), count=1))[0]
     for provider, handle in quotes.items():
         if provider != first_quote["provider"]:
-            aga.cancel(handle, reason="first quote already selected")
+            app.cancel(handle, reason="first quote already selected")
     child_result = await child
 
-    await aga.sleep(1)
-    signal = await aga.signal("external_signal", timeout=60)
-    approval = await aga.signal(
+    await app.sleep(1)
+    signal = await app.signal("external_signal", timeout=60)
+    approval = await app.signal(
         aga.Approval(
             "manual_approval",
             {"risk": risk, "quote": first_quote},
         ),
         timeout=60,
     )
-    aga.event("TourCompleted", {"approved_by": approval["reviewer"]})
+    app.event("TourCompleted", {"approved_by": approval["reviewer"]})
     return {
         "normalized": normalized,
         "risk": risk,

@@ -61,7 +61,7 @@ if __name__ == "__main__":
 ### Install the example
 
 The two-second and one-second pauses above only simulate slow service work.
-They block inside these demo steps; use `aga.sleep` for a durable workflow wait
+They block inside these demo steps; use `app.sleep` for a durable workflow wait
 that releases worker capacity.
 
 You'll need Python 3.11, Git, and Docker with Compose running. Check with
@@ -76,13 +76,15 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 python -m ensurepip --upgrade
 python -m pip install --upgrade pip
+python -m pip install "aga-runtime==0.4.2"
 python -m pip install -e .
 docker compose -f compose.tutorial.yml up -d
 ```
 
 Stay in the `sdk-examples` directory for the remaining commands. The virtual
 environment keeps the example's Python packages separate from your other projects.
-The install adds both the example modules and Aga SDK 0.4.1 or later in the 0.4 line.
+The exact SDK release comes from PyPI; the editable install adds the example
+modules.
 
 This Compose file downloads Aga server 0.2.1 and starts PostgreSQL for it.
 It doesn't build source or need a private-module token. Open
@@ -101,6 +103,7 @@ From your `sdk-examples` checkout:
 git pull --ff-only
 source .venv/bin/activate
 python -m ensurepip --upgrade
+python -m pip install --upgrade "aga-runtime==0.4.2"
 python -m pip install --upgrade -e .
 docker compose -f compose.tutorial.yml pull
 docker compose -f compose.tutorial.yml up -d

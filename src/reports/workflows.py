@@ -23,7 +23,7 @@ def render_report(report: str, occurrence: str) -> dict:
 )
 @app.workflow(name="reports.daily")
 async def reports_daily(request: dict) -> dict:
-    scheduled_time = aga.info().scheduled_time
+    scheduled_time = app.info().scheduled_time
     assert scheduled_time is not None
     occurrence = scheduled_time.isoformat()
     return await render_report(request["report"], occurrence)

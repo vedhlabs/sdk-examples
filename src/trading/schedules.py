@@ -15,7 +15,7 @@ from trading.workflows import trading_rebalance
 )
 @app.workflow(name="trading.rebalance-day", version="1")
 async def rebalance_day(request: dict) -> dict:
-    scheduled_time = aga.info().scheduled_time
+    scheduled_time = app.info().scheduled_time
     assert scheduled_time is not None
     trade_date = scheduled_time.date().isoformat()
     children = [

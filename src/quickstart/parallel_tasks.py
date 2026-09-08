@@ -37,7 +37,7 @@ async def sticky_checks(order_id: str) -> dict:
     # Both calls start before waiting; the local worker runs them concurrently.
     stock_task = check_stock(order_id)
     shipping_task = quote_shipping(order_id)
-    stock, shipping = await aga.join(stock_task, shipping_task)
+    stock, shipping = await app.join(stock_task, shipping_task)
     return {"stock": stock, "shipping": shipping}
 
 
@@ -46,7 +46,7 @@ async def distributed_checks(order_id: str) -> dict:
     # Both operations are submitted before waiting; available workers run them.
     stock_task = check_stock(order_id)
     shipping_task = quote_shipping(order_id)
-    stock, shipping = await aga.join(stock_task, shipping_task)
+    stock, shipping = await app.join(stock_task, shipping_task)
     return {"stock": stock, "shipping": shipping}
 
 

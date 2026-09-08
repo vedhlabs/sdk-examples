@@ -10,19 +10,21 @@ required.
 
 New to Aga? Start with [your first workflow](docs/first-workflow.md): one file,
 two steps, and a local server downloaded as a released image. The tutorial uses
-Python 3.11, Git, and Docker with Compose—no private-module token or sibling checkout.
-The [Python guide](https://coding2fun.in/aga/python) explains that exact source.
+Python 3.11, Git, Docker with Compose, and `aga-runtime==0.4.2` from PyPI. It
+needs no private-module token or server source checkout. The
+[Python guide](https://coding2fun.in/aga/python) explains that exact setup.
 
 ## Build the development stack (contributors)
 
-Requirements: Python 3.10+, Docker with Compose, a sibling `aga` checkout, and a
-`GITHUB_TOKEN` that can read the private Aga Go modules.
+Requirements: Python 3.10+, Docker with Compose, sibling `aga` and `sdk-python`
+checkouts, and a `GITHUB_TOKEN` that can read the private Aga Go modules.
 
 ```bash
 git clone https://github.com/vedhlabs/sdk-examples.git
 cd sdk-examples
 python -m venv .venv
 source .venv/bin/activate
+python -m pip install -e ../sdk-python
 python -m pip install -e ".[dev]"
 docker compose up -d
 ```
@@ -92,18 +94,17 @@ uses the active execution scope to distinguish a root from an owned child; an un
 child is joined automatically. Use immutable `workflow.options(detached=True)` only when that
 child must outlive its parent.
 
-> **Breaking SDK release.** These examples target `aga-runtime` 0.4. It removes
-> 0.3 aliases such as bare decorators, `.run()`, direct child Workflow calls, `.detach()`,
-> `gather/race/quorum`, `approval()`, and `scheduled_time()`. A target or Workflow name is not a
-> compatibility fence: complete the database-wide
-> hard cutover and stop all 0.3 servers and workers before 0.4 accepts work.
+> **Source-breaking SDK 0.4.2.** Controls live only on their App; there are no
+> package-level compatibility aliases. Migrate every control call before
+> restarting a worker fleet that previously ran 0.4.1.
 
 ## Examples
 
 | Guide                                     | Package               | What it demonstrates                                                                                    |
 | :---------------------------------------- | :-------------------- | :------------------------------------------------------------------------------------------------------ |
 | [First workflow](docs/first-workflow.md) | `quickstart.first_workflow` | one complete file, two sequential steps, worker and caller setup |
-| [Two tasks and worker capacity](docs/parallel-tasks.md) | `quickstart.parallel_tasks` | SDK 0.4.1: concurrent sticky/distributed tasks, both caller styles, and worker capacity |
+| [Two tasks and worker capacity](docs/parallel-tasks.md) | `quickstart.parallel_tasks` | concurrent sticky/distributed tasks, both caller styles, and worker capacity |
+| [Parallel KYC review](docs/kyc-parallel.md) | `quickstart.kyc_parallel` | five distinct durable checks, one sync caller, one join, and an observable waterfall |
 | [Quickstart](docs/quickstart.md)          | `quickstart`          | sync waiting, async submit, workflow placement, crash recovery, schedules                               |
 | [Checkout and reports](docs/checkout.md)  | `checkout`, `reports` | provider idempotency, compensation shape, engine cron                                                   |
 | [Order workflow](docs/ecommerce.md)       | `ecommerce`           | fan-out, quorum, cancel, approval, webhook signal, sleep, event                                         |

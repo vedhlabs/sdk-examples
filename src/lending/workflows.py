@@ -40,7 +40,7 @@ async def disbursement(request: dict) -> dict:
 async def application(request: dict) -> dict:
     applicant = request["applicant"]
     amount = int(request["amount"])
-    aga.event("ApplicationReceived", {"id": applicant["id"], "amount": amount})
+    app.event("ApplicationReceived", {"id": applicant["id"], "amount": amount})
 
     kyc_result = await run_kyc(applicant)
     if not kyc_result["passed"]:
@@ -56,7 +56,7 @@ async def application(request: dict) -> dict:
 
     if underwriting_result["decision"] == "needs_review":
         try:
-            approval = await aga.signal(
+            approval = await app.signal(
                 aga.Approval(
                     "manual_underwriting",
                     {"applicant": applicant["id"], "amount": amount},
@@ -69,7 +69,7 @@ async def application(request: dict) -> dict:
             return {"status": "rejected", "stage": "approval", "reason": "denied"}
 
     disbursement_result = await run_disbursement(applicant, amount)
-    aga.event("Disbursed", {"txn": disbursement_result["txn_id"], "amount": amount})
+    app.event("Disbursed", {"txn": disbursement_result["txn_id"], "amount": amount})
     return {
         "status": "disbursed",
         "applicant": applicant["id"],
@@ -97,5 +97,5 @@ async def month_end(request: dict) -> dict:
         )
         for borrower in borrowers
     ]
-    aga.event("MonthEndStarted", {"count": len(children), "period": period})
+    app.event("MonthEndStarted", {"count": len(children), "period": period})
     return {"started": len(children), "run_ids": [child.id for child in children]}

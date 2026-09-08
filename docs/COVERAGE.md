@@ -21,5 +21,10 @@ an `execution="sync"` workflow declaration. The asynchronous client uses the sam
 operation and receives a `Handle` immediately.
 
 `parallel_tasks.py` demonstrates the same distinction plus two calls followed by
-one join. SDK 0.4.1 supports actual sticky and distributed overlap in one worker
-process. Its walkthrough uses the published package and checks both caller styles.
+one join. SDK 0.4.2 supports actual sticky and distributed overlap
+in one worker process. Its walkthrough uses the released PyPI package and checks
+both caller styles.
+
+`kyc_parallel.py` makes that concurrency concrete with five distinct business
+Steps in one sticky Run. Its sync caller waits for one joined result, and its live
+smoke proves the five random two-to-three-second intervals overlap.

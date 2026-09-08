@@ -37,7 +37,7 @@ def test_given_two_tasks_when_workflow_runs_then_both_calls_precede_join(monkeyp
 
     monkeypatch.setattr(parallel_tasks, "check_stock", check)
     monkeypatch.setattr(parallel_tasks, "quote_shipping", quote)
-    monkeypatch.setattr(parallel_tasks.aga, "join", join)
+    monkeypatch.setattr(parallel_tasks.app, "join", join)
     assert asyncio.run(workflow.__wrapped__("order-1")) == {
         "stock": {"available": True}, "shipping": {"cost": 50},
     }
@@ -52,4 +52,4 @@ def test_given_documented_core_example_when_read_then_it_matches_source():
     root = Path(__file__).resolve().parents[1]
     source = (root / "src/quickstart/parallel_tasks.py").read_text()
     assert 'app = aga.App("parallel-tasks", concurrency=8)' in source
-    assert source.count("await aga.join(stock_task, shipping_task)") == 2
+    assert source.count("await app.join(stock_task, shipping_task)") == 2

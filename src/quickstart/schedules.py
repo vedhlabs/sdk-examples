@@ -27,9 +27,9 @@ def build_report(report: str, occurrence: str) -> dict:
 )
 @app.workflow(name="quickstart.daily-report")
 async def daily_report(request: dict) -> dict:
-    scheduled_time = aga.info().scheduled_time
+    scheduled_time = app.info().scheduled_time
     assert scheduled_time is not None
     occurrence = scheduled_time.isoformat()
     report = await build_report(request["report"], occurrence)
-    aga.event("ReportBuilt", report)
+    app.event("ReportBuilt", report)
     return report

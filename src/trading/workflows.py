@@ -64,7 +64,7 @@ async def work_orders(orders: list[dict], run_tag: str, rounds: int = 3) -> dict
                         pending["ref"],
                         new_limit,
                     )
-        await aga.sleep(1)
+        await app.sleep(1)
 
     for pending in placed:
         if pending["state"] == "open":
@@ -89,19 +89,19 @@ async def trading_rebalance(request: dict) -> dict:
     if not clock["session_today"]:
         return {"portfolio": portfolio, "action": "market_closed"}
     if not clock["is_open"]:
-        aga.event("WaitingForOpen", clock)
-        await aga.sleep(clock["seconds_to_open"])
+        app.event("WaitingForOpen", clock)
+        await app.sleep(clock["seconds_to_open"])
 
     account_h = get_account()
     positions_h = get_positions()
-    account, positions = await aga.join(account_h, positions_h)
+    account, positions = await app.join(account_h, positions_h)
     targets = await model_target_weights(portfolio, positions, account)
     plan = await calculate_plan(targets, positions, account)
     await pretrade_risk(plan)
 
     if Decimal(plan["turnover_pct"]) > APPROVAL_TURNOVER_PCT:
         try:
-            approval = await aga.signal(
+            approval = await app.signal(
                 aga.Approval(
                     "rebalance_approval",
                     {"portfolio": portfolio, "turnover_pct": plan["turnover_pct"]},
@@ -122,7 +122,7 @@ async def trading_rebalance(request: dict) -> dict:
         {"sells": sells, "buys": buys},
         reconciled,
     )
-    aga.event("RebalanceRecorded", {"record_id": record["record_id"]})
+    app.event("RebalanceRecorded", {"record_id": record["record_id"]})
     return {
         "portfolio": portfolio,
         "status": "completed",

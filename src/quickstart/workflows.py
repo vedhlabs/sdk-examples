@@ -54,7 +54,7 @@ async def checkout(order: dict) -> dict:
     reservation = await reserve_inventory(order)
     charge = await charge_customer(order, validated["total"])
     receipt = await send_receipt(order, charge)
-    aga.event("CheckoutCompleted", {"order_id": order["id"], "charge": charge["charge_id"]})
+    app.event("CheckoutCompleted", {"order_id": order["id"], "charge": charge["charge_id"]})
     return {
         "order_id": order["id"],
         "total": validated["total"],

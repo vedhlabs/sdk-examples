@@ -33,9 +33,9 @@ def definitions(directory: Path):
 
     @app.workflow()
     async def workflow() -> str:
-        values = await aga.join(prefix(1), prefix(2))
+        values = await app.join(prefix(1), prefix(2))
         # event flushes the completed prefix through the existing root fence.
-        aga.event("prefix-complete", values)
+        app.event("prefix-complete", values)
         return await tail()
 
     return app, workflow
