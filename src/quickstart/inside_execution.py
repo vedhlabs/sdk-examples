@@ -16,7 +16,7 @@ import aga_runtime as aga
 
 app = aga.App(
     "inside-execution",
-    namespace=os.environ.get("AGA_NAMESPACE", "inside-lab"),
+    namespace=os.environ.get("AGA_NAMESPACE", "default"),
     concurrency=8,
 )
 
@@ -141,7 +141,7 @@ def main() -> None:
             print(json.dumps(run.result(timeout=60), indent=2), flush=True)
         else:
             print(
-                "Submission acknowledged; inspect this Run in the inside-lab namespace.", flush=True
+                "Submission acknowledged; inspect this Run in the selected Namespace.", flush=True
             )
     finally:
         app.close()

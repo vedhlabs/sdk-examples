@@ -47,17 +47,17 @@ Worker terminal:
 ```bash
 source .venv/bin/activate
 export AGA_URL=http://127.0.0.1:8080
-export AGA_NAMESPACE=parallel-tasks
+export AGA_NAMESPACE=default
 python -m quickstart.parallel_tasks --worker
 ```
 
 In a second terminal, enter the same repository directory and activate the same
-environment and namespace:
+environment and Namespace ID:
 
 ```bash
 source .venv/bin/activate
 export AGA_URL=http://127.0.0.1:8080
-export AGA_NAMESPACE=parallel-tasks
+export AGA_NAMESPACE=default
 
 # Sync: caller waits; independent sticky steps can overlap.
 python -m quickstart.parallel_tasks --mode sync
@@ -79,7 +79,7 @@ python -m quickstart.parallel_tasks --mode async_distributed --wait
 Every submission generates a new Run ID. `--order-id` changes the business input;
 this example does not use it as a submission idempotency key.
 
-Open [the dashboard](http://127.0.0.1:8080), select `default / parallel-tasks`,
+Open [the dashboard](http://127.0.0.1:8080), select **Default**,
 and find the printed Run ID. Both checks appear under the same Run. With one
 worker, the returned `started_ns` / `finished_ns` intervals can show overlap.
 These monotonic values are demo diagnostics: compare them only in this single
@@ -108,7 +108,7 @@ python scripts/smoke_parallel_tasks.py
 python scripts/smoke_sticky_recovery.py
 ```
 
-The smoke check uses its own namespace and one worker process. It verifies
+The smoke check provisions its own Namespace and uses one worker process. It verifies
 sticky and distributed overlap, all three CLI modes and final
 outputs. It terminates only its own worker, leaving run history in place.
 The recovery check kills its own worker after committing two concurrent results,

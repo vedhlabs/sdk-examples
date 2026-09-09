@@ -29,7 +29,7 @@ Worker terminal:
 ```bash
 source .venv/bin/activate
 export AGA_URL=http://127.0.0.1:8080
-export AGA_NAMESPACE=kyc-concurrent-demo
+export AGA_NAMESPACE=default
 python -m quickstart.kyc_parallel --worker
 ```
 
@@ -38,7 +38,7 @@ Caller terminal:
 ```bash
 source .venv/bin/activate
 export AGA_URL=http://127.0.0.1:8080
-export AGA_NAMESPACE=kyc-concurrent-demo
+export AGA_NAMESPACE=default
 python -m quickstart.kyc_parallel --application-id KYC-SYNC-5-CHECKS
 ```
 
@@ -50,8 +50,8 @@ Inside the workflow, all five direct calls happen before one `app.join(...)`.
 They are Steps in the same Run, not child workflows, so no spawn operation is
 needed. `concurrency=8` leaves enough local execution capacity for all five.
 
-Open [the dashboard](http://127.0.0.1:8080), select
-`default / kyc-concurrent-demo`, and open the printed Run ID. The operation list
+Open [the dashboard](http://127.0.0.1:8080), select **Default**, and open the
+printed Run ID. The operation list
 shows all five names. Expand **Advanced diagnostics** to see their overlapping
 waterfall bars and select any row to inspect its input and output.
 
@@ -68,6 +68,6 @@ python -m pytest tests/test_kyc_parallel.py
 make smoke-kyc
 ```
 
-The smoke check creates an isolated namespace, runs the released server with the
-local SDK candidate, and proves all five measured intervals overlap in one worker process. It
+The smoke check creates an isolated Namespace, uses the local PostgreSQL server
+and SDK candidate, and proves all five measured intervals overlap in one worker process. It
 stops only its own temporary worker and preserves the completed Run for inspection.

@@ -90,7 +90,7 @@ the caller waits. Public workflow placement is `async` (the sticky default) or
 primitives, and trading demonstrate distributed placement.
 
 `app.start(workflow, ...)` is also the only way to create a child Run inside a workflow. The App
-uses the active execution scope to distinguish a root from an owned child; an unfinished owned
+uses the active execution context to distinguish a root from an owned child; an unfinished owned
 child is joined automatically. Use immutable `workflow.options(detached=True)` only when that
 child must outlive its parent.
 
@@ -116,7 +116,7 @@ child must outlive its parent.
 Use `python -m <package>.<command> --help` for command options. All examples read:
 
 - `AGA_URL`, default `http://localhost:8080`
-- `AGA_NAMESPACE`, default `default`
+- `AGA_NAMESPACE`, immutable Namespace ID, default `default`
 - `AGA_EXAMPLE_STATE`, default `.state/examples.sqlite3`
 
 ## External effects and retries

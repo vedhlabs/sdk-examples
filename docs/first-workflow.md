@@ -121,7 +121,7 @@ terminal open:
 ```bash
 source .venv/bin/activate
 export AGA_URL=http://127.0.0.1:8080
-export AGA_NAMESPACE=first-workflow
+export AGA_NAMESPACE=default
 python -m quickstart.first_workflow --worker
 ```
 
@@ -135,7 +135,7 @@ Open another terminal, go to the **same `sdk-examples` directory**, then run:
 ```bash
 source .venv/bin/activate
 export AGA_URL=http://127.0.0.1:8080
-export AGA_NAMESPACE=first-workflow
+export AGA_NAMESPACE=default
 python -m quickstart.first_workflow
 ```
 
@@ -146,7 +146,12 @@ Run ID: <generated run ID>
 Order total: 350 cents
 ```
 
-In the dashboard, choose scope `default / first-workflow`, open **Runs**, and
+The server creates the **Default** Namespace automatically. `AGA_NAMESPACE`
+always takes its immutable ID (`default` here), not its editable display name.
+To isolate an experiment, use **Manage Namespaces** in the dashboard, create one,
+and use the generated `ns_...` ID in both terminals.
+
+In the dashboard, choose **Default**, open **Runs**, and
 select the printed ID. You should find a completed `checkout` with
 `calculate_total` and `make_summary` results.
 
@@ -161,8 +166,8 @@ should refer to the same order.
 | `No module named pip` | Run `python -m ensurepip --upgrade`, then `python -m pip install -e .`. If `ensurepip` is unavailable and you have `uv`, use `uv pip install --python .venv/bin/python -e .`. |
 | `No module named quickstart` | Activate this repository's virtual environment and run `python -m pip install -e .`. |
 | Connection refused or no dashboard | Run `docker compose -f compose.tutorial.yml ps`, then `docker compose -f compose.tutorial.yml logs aga`. Docker must be running. |
-| A run ID prints, then the caller times out | Keep Terminal 1 running. Both terminals must use the same URL, namespace, and source file. |
-| No run in the dashboard | Select `default / first-workflow` and search for the printed ID. |
+| A run ID prints, then the caller times out | Keep Terminal 1 running. Both terminals must use the same URL, Namespace ID, and source file. |
+| No run in the dashboard | Select **Default** and search for the printed ID. |
 | Port 8080 is already in use | Start Compose with `AGA_TUTORIAL_PORT=8088 docker compose -f compose.tutorial.yml up -d`, then use port 8088 in both terminals and the browser. |
 
 The caller waits up to 30 seconds in this example. A caller timeout doesn't cancel
@@ -188,7 +193,7 @@ With the tutorial server running, stop the first worker, then use
 `python -m quickstart.checkout_app --worker` and
 `python -m quickstart.checkout_app` in the two terminals. This starts an
 engine-managed daily schedule as well as registering the workflow. For experiments,
-keep this in the tutorial stack, not a production namespace.
+keep this in the tutorial stack, not a production Namespace.
 
 The longer example uses fixed run ID `ORDER-42`; repeating its command refers
 to the same run. Change the order ID for a new order or changed input.
@@ -210,7 +215,7 @@ make smoke-first
 
 `smoke-first` checks delayed worker startup, the small example's actual CLI,
 invalid-input failure, and the full checkout's default path. It creates fresh
-test namespaces and stops the workers it started. It does not delete run history
+test Namespaces and stops the workers it started. It does not delete run history
 or exercise the optional external risk service.
 
 When editing the blog checkout, also run `python scripts/check_sdk_guide.py

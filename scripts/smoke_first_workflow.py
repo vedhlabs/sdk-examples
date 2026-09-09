@@ -34,14 +34,17 @@ def worker(module, env):
 
 
 def main():
-    namespace = f"first-workflow-smoke-{uuid.uuid4().hex[:10]}"
-    os.environ["AGA_NAMESPACE"] = namespace
     os.environ.setdefault("AGA_URL", "http://127.0.0.1:8080")
+    from example_support.config import create_namespace
+
+    smoke_id = uuid.uuid4().hex[:10]
+    namespace = create_namespace(f"First workflow smoke {smoke_id}")
+    os.environ["AGA_NAMESPACE"] = namespace
     from quickstart.first_workflow import app, checkout
 
     try:
         pending = app.start(checkout, [200, 150])
-        assert not pending.done(), "No worker should exist in this new namespace"
+        assert not pending.done(), "No worker should exist in this new Namespace"
         print(f"Submitted without a worker: {pending.id}", flush=True)
         with worker("quickstart.first_workflow", os.environ.copy()):
             assert pending.result(timeout=30) == "Order total: 350 cents"
@@ -65,7 +68,8 @@ def main():
         app.close()
 
     with tempfile.TemporaryDirectory(prefix="aga-checkout-guide-") as temp:
-        env = dict(os.environ, AGA_NAMESPACE=f"{namespace}-full")
+        full_namespace = create_namespace(f"Full checkout smoke {smoke_id}")
+        env = dict(os.environ, AGA_NAMESPACE=full_namespace)
         env["AGA_EXAMPLE_STATE"] = str(Path(temp) / "providers.sqlite3")
         with worker("quickstart.checkout_app", env):
             command = subprocess.run(
@@ -77,7 +81,7 @@ def main():
             assert "tracking" in command.stdout
             assert "charge_id" in command.stdout
             print(f"Full checkout: {command.stdout.strip()}", flush=True)
-    print(f"Both guide examples passed; scopes: {namespace}, {namespace}-full")
+    print(f"Both guide examples passed; Namespace IDs: {namespace}, {full_namespace}")
 
 
 if __name__ == "__main__":

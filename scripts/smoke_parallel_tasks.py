@@ -10,9 +10,12 @@ from smoke_first_workflow import ROOT, worker
 
 
 def main() -> None:
-    namespace = f"parallel-tasks-smoke-{uuid.uuid4().hex[:10]}"
-    os.environ["AGA_NAMESPACE"] = namespace
     os.environ.setdefault("AGA_URL", "http://127.0.0.1:8080")
+    from example_support.config import create_namespace
+
+    smoke_id = uuid.uuid4().hex[:10]
+    namespace = create_namespace(f"Parallel tasks smoke {smoke_id}")
+    os.environ["AGA_NAMESPACE"] = namespace
     from quickstart.parallel_tasks import app, distributed_checks, sticky_checks
 
     try:
@@ -56,7 +59,7 @@ def main() -> None:
             print("CLI distributed --wait: result returned", flush=True)
     finally:
         app.close()
-    print(f"Passed. Retained scope: default / {namespace}")
+    print(f"Passed. Retained Namespace ID: {namespace}")
 
 
 if __name__ == "__main__":

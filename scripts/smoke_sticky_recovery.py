@@ -56,7 +56,10 @@ def main() -> None:
         finally:
             app.close()
         return
-    namespace = f"sticky-recovery-{uuid.uuid4().hex[:10]}"
+    from example_support.config import create_namespace
+
+    smoke_id = uuid.uuid4().hex[:10]
+    namespace = create_namespace(f"Sticky recovery smoke {smoke_id}")
     os.environ["AGA_NAMESPACE"] = namespace
     with tempfile.TemporaryDirectory(prefix="aga-recovery-") as temporary:
         directory = Path(temporary)
@@ -77,7 +80,7 @@ def main() -> None:
                 assert run.result(timeout=45) == "recovered"
                 for number in (1, 2):
                     assert (directory / f"prefix-{number}").read_text() == "executed\n"
-                print(f"Recovered {run.id}; concurrent prefix ran once; scope {namespace}")
+                print(f"Recovered {run.id}; concurrent prefix ran once; Namespace {namespace}")
             except BaseException:
                 log.seek(0)
                 print(log.read(), file=sys.stderr)

@@ -7,9 +7,12 @@ from smoke_first_workflow import worker
 
 
 def main() -> None:
-    namespace = f"kyc-parallel-smoke-{uuid.uuid4().hex[:10]}"
-    os.environ["AGA_NAMESPACE"] = namespace
     os.environ.setdefault("AGA_URL", "http://127.0.0.1:8080")
+    from example_support.config import create_namespace
+
+    smoke_id = uuid.uuid4().hex[:10]
+    namespace = create_namespace(f"KYC parallel smoke {smoke_id}")
+    os.environ["AGA_NAMESPACE"] = namespace
     from quickstart.kyc_parallel import app, kyc_review
 
     application_id = f"application-{uuid.uuid4().hex[:10]}"
@@ -37,7 +40,7 @@ def main() -> None:
             print(f"Passed: {run.id}", flush=True)
     finally:
         app.close()
-    print(f"Retained scope: default / {namespace}")
+    print(f"Retained Namespace ID: {namespace}")
 
 
 if __name__ == "__main__":

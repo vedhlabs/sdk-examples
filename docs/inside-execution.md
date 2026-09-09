@@ -13,15 +13,15 @@ Set up the released server and virtual environment using
 # Terminal one: leave this worker running.
 source .venv/bin/activate
 export AGA_URL=http://127.0.0.1:8080
-export AGA_NAMESPACE=inside-lab
+export AGA_NAMESPACE=default
 python -m quickstart.inside_execution --worker
 ```
 
 ```bash
-# Terminal two: use the same server and scope.
+# Terminal two: use the same server and Namespace ID.
 source .venv/bin/activate
 export AGA_URL=http://127.0.0.1:8080
-export AGA_NAMESPACE=inside-lab
+export AGA_NAMESPACE=default
 python -m quickstart.inside_execution --mode sync
 python -m quickstart.inside_execution --mode sync --parallel
 python -m quickstart.inside_execution --mode async
@@ -35,7 +35,7 @@ Sync waits and prints the final five results. Async modes return after admission
 add `--wait` to observe their results in the terminal. `--parallel` calls all five
 Steps before `app.join`; without it, each call is awaited before the next.
 
-Open [the dashboard](http://127.0.0.1:8080), choose **default / inside-lab**, and
+Open [the dashboard](http://127.0.0.1:8080), choose **Default**, and
 find the printed Run ID. Select a Step to see its input and output. Optional
 `--applicant-id DEMO-002` tags the root with an `applicant` resource; search
 `resource:applicant/DEMO-002`. Optional `--run-id` must be fresh for a new experiment.

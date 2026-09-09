@@ -10,12 +10,17 @@ from pathlib import Path
 from typing import Any
 
 SMOKE_ID = uuid.uuid4().hex[:10]
-os.environ.setdefault("AGA_NAMESPACE", f"sdk-examples-smoke-{SMOKE_ID}")
+os.environ.setdefault("AGA_URL", "http://127.0.0.1:8080")
 os.environ.setdefault("AGA_EXAMPLE_STATE", f".state/smoke-{SMOKE_ID}.sqlite3")
 os.environ.setdefault("TRADING_BROKER", "mock")
 
 import aga_runtime as aga  # noqa: E402
 from aga_runtime.protocol.wire import Feature  # noqa: E402
+
+from example_support.config import create_namespace  # noqa: E402
+
+if "AGA_NAMESPACE" not in os.environ:
+    os.environ["AGA_NAMESPACE"] = create_namespace(f"SDK examples smoke {SMOKE_ID}")
 
 from checkout.app import app as checkout_app  # noqa: E402
 from checkout.workflows import checkout as compact_checkout  # noqa: E402
@@ -233,7 +238,7 @@ def main() -> None:
                 if process.poll() is not None:
                     raise RuntimeError(f"worker {module} exited with {process.returncode}")
             run_checks(supports_schedules=supports_schedules)
-            print(f"smoke passed in namespace {os.environ['AGA_NAMESPACE']}")
+            print(f"smoke passed in Namespace {os.environ['AGA_NAMESPACE']}")
         except Exception:
             for module, process, log in zip(worker_modules, processes, logs, strict=True):
                 log.flush()
