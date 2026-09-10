@@ -1,3 +1,4 @@
+from checkout.adapters import payments
 from example_support.store import ExampleStore, stable_id
 
 
@@ -17,3 +18,15 @@ def test_once_returns_first_result_and_counts_retries(tmp_path):
 def test_stable_id_is_deterministic_and_scoped_by_prefix():
     assert stable_id("charge", "order-1") == stable_id("charge", "order-1")
     assert stable_id("charge", "order-1") != stable_id("shipment", "order-1")
+
+
+def test_given_uncertain_charge_when_looked_up_then_original_receipt_is_returned(
+    tmp_path, monkeypatch,
+):
+    provider = ExampleStore(tmp_path / "effects.sqlite3")
+    monkeypatch.setattr(payments, "store", provider)
+
+    receipt = payments.charge("customer-1", 1_500, "order:42:charge")
+
+    assert payments.find_charge("order:42:charge") == receipt
+    assert payments.find_charge("order:missing:charge") is None
