@@ -10,9 +10,10 @@ def test_once_returns_first_result_and_counts_retries(tmp_path):
     assert first == {"charge": "first"}
     assert retry == first
     assert store.effect_calls("payments", "order-1") == 2
+    assert store.effect("payments", "order-1") == first
+    assert store.effect("payments", "missing") is None
 
 
 def test_stable_id_is_deterministic_and_scoped_by_prefix():
     assert stable_id("charge", "order-1") == stable_id("charge", "order-1")
     assert stable_id("charge", "order-1") != stable_id("shipment", "order-1")
-

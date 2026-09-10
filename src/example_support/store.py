@@ -88,6 +88,15 @@ class ExampleStore:
             ).fetchone()
         return json.loads(row[0]) if row is not None else default
 
+    def effect(self, scope: str, key: str) -> Any | None:
+        """Look up a provider receipt by the original idempotency key."""
+        with self._connect() as db:
+            row = db.execute(
+                "SELECT value_json FROM effects WHERE scope = ? AND effect_key = ?",
+                (scope, key),
+            ).fetchone()
+        return json.loads(row[0]) if row is not None else None
+
     def set(self, scope: str, key: str, value: Any) -> Any:
         with self._connect() as db:
             db.execute(

@@ -129,6 +129,13 @@ therefore accepts a stable business idempotency key and returns the original res
 Production adapters must use the same provider-side capability or an application-owned inbox,
 outbox, or reconciliation design.
 
+A Step timeout is not a socket timeout. Configure bounded connect, pool, write, and response-read
+timeouts in the provider client, shorter than the Step's attempt budget. After a connection drops,
+look up the original request by its stable key: reuse a committed receipt, retry with the same key
+only when the provider proves it absent, and escalate an outcome the provider still calls unknown.
+The local effect store exposes `effect(scope, key)` so the examples can demonstrate that lookup.
+See [external effects and uncertain outcomes](docs/external-effects.md).
+
 `client.apply_once(...)` is useful as an Aga-side admission marker. It is not, by itself, an
 atomic exactly-once wrapper around a separate network request.
 
