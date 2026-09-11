@@ -1,0 +1,68 @@
+name: CI
+
+# sdk-examples had no CI. Examples are documentation that compiles, so one that has
+# quietly stopped working is worse than a missing page: it reads as verified.
+#
+# No `if:` gate on the job. A pipeline that can report success while running nothing
+# is worse than no pipeline; the server's CI carried exactly that bug until AGA-137.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # Tested against the SDK SOURCE rather than the published package, deliberately.
+      # Against the release, this answers "do the examples work for a user today?" and
+      # finds breakage after it has shipped. Against source it answers "will they still
+      # work after the next release?", which is the question worth a gate.
+      - name: Check out the SDK source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: vedhlabs/sdk-python
+          path: .sdk-python
+          token: ${{ secrets.VEDHLABS_REPO_TOKEN }}
+
+      - name: Confirm the SDK source is present
+        run: |
+          if [ ! -f .sdk-python/pyproject.toml ]; then
+            echo "sdk-python was not checked out. VEDHLABS_REPO_TOKEN must be a" >&2
+            echo "read-only fine-grained token that can read sdk-python."        >&2
+            exit 1
+          fi
+
+      - name: Install uv
+        run: |
+          pipx install uv
+          uv --version
+
+      # 3.12 rather than the repository's 3.10 floor: these are examples, and the
+      # floor is already gated by the SDK's own 3.10-3.13 matrix. Duplicating that
+      # matrix here would multiply runtime without testing anything new.
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: ruff
+        run: uv run --python 3.12 --with-editable .sdk-python --with ruff ruff check .
+
+      # No engine, no docker compose. These 49 tests are the ones that need neither,
+      # which is why they make a gate: a test requiring a live server would be a
+      # deployment check wearing a unit test's clothes.
+      - name: Tests
+        run: uv run --python 3.12 --with-editable .sdk-python --with pytest pytest -q
