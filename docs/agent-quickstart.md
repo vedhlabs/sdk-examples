@@ -16,8 +16,9 @@ that unfinished invocation are therefore **at least once**.
 
 ## Install and run
 
-Start the normal tutorial server, then install the core SDK, the separate Strands
-adapter, and the example:
+For this read-only local Agent, either the normal tutorial server or the
+source-built development server works. Install the current core SDK, the separate
+Strands adapter, and the example:
 
 ```bash
 python -m pip install -e ../sdk-python
@@ -26,9 +27,8 @@ python -m pip install -e .
 python -m agent_quickstart.worker
 ```
 
-The first two commands use the sibling source checkouts. A later package release
-can replace them with `python -m pip install aga-runtime aga-strands`; this
-implementation checkpoint does not publish either package.
+The first two commands use the sibling source checkouts. They are source
+candidates, not published package instructions.
 
 From another terminal, submit without waiting:
 
@@ -75,6 +75,11 @@ PostgreSQL and an unrelated payment, ticket, email, or infrastructure API. A
 mutating Strands tool must call `app.effect(...)` with a stable idempotency key and
 support reconciliation when the provider outcome is unknown. Read-only tools do not
 need an effect receipt.
+
+The released tutorial server does not advertise effect receipts. Before trying a
+mutating tool, stop that tutorial stack and start the contributor stack with
+`docker compose up -d`; it builds the sibling server source that implements the
+effect contract. Capability negotiation then fails closed if either side is too old.
 
 This is the **opaque** adapter layer. It does not make each internal model call or
 tool call a separate Aga operation, and Strands checkpoints or sessions do not

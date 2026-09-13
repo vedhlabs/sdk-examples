@@ -32,6 +32,11 @@ docker compose up -d
 The Compose project builds the current sibling Aga engine from source instead of
 pulling a registry image.
 
+The released two-step tutorial remains compatible with `aga-runtime==0.4.2`.
+Examples that use effect receipts or the Strands adapter exercise the current
+`0.4.3` source candidate and must use the sibling SDK plus this source-built
+server until those candidates are released.
+
 Open [http://localhost:8080](http://localhost:8080) for the Aga dashboard. Then run the
 quickstart in two terminals:
 
