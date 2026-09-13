@@ -105,6 +105,7 @@ child must outlive its parent.
 | [First workflow](docs/first-workflow.md) | `quickstart.first_workflow` | one complete file, two sequential steps, worker and caller setup |
 | [Two tasks and worker capacity](docs/parallel-tasks.md) | `quickstart.parallel_tasks` | concurrent sticky/distributed tasks, both caller styles, and worker capacity |
 | [Parallel KYC review](docs/kyc-parallel.md) | `quickstart.kyc_parallel` | five distinct durable checks, one sync caller, one join, and an observable waterfall |
+| [Parallel workflow family](docs/primitives.md#see-three-child-workflows-run-together) | `primitives.parallel_family` | one parent, three owned children, and six overlapping durable checks |
 | [Strands Agent](docs/agent-quickstart.md) | `agent_quickstart` | one opaque Agent invocation, deterministic local model, fresh state per attempt, and optional Bedrock |
 | [Inside Aga execution lab](docs/inside-execution.md) | `quickstart.inside_execution` | five distinct functions, all six caller/placement and sequential/parallel combinations, synthetic timing, and resource lookup |
 | [Quickstart](docs/quickstart.md)          | `quickstart`          | sync waiting, async submit, workflow placement, crash recovery, schedules                               |

@@ -16,6 +16,12 @@ from primitives.family import (
     family_stage,
 )
 from primitives.methods import methods_tour, risk_score
+from primitives.parallel_family import (
+    employment_checks,
+    financial_checks,
+    identity_checks,
+    parallel_family_root,
+)
 from quickstart.app import app as quickstart_app
 from quickstart.schedules import daily_report
 from quickstart.workflows import checkout as quickstart_checkout
@@ -42,6 +48,22 @@ def test_documented_workflow_names_and_targets_are_registered():
         family_loop: ("primitives.family.loop", "python://primitives"),
         family_fulfilment: ("primitives.family.fulfilment", "python://primitives"),
         family_finalize: ("primitives.family.finalize", "python://primitives"),
+        parallel_family_root: (
+            "primitives.parallel-family.root",
+            "python://primitives",
+        ),
+        identity_checks: (
+            "primitives.parallel-family.identity",
+            "python://primitives",
+        ),
+        employment_checks: (
+            "primitives.parallel-family.employment",
+            "python://primitives",
+        ),
+        financial_checks: (
+            "primitives.parallel-family.financial",
+            "python://primitives",
+        ),
     }
     for function, (name, target) in expected.items():
         spec = function.__aga_spec__
@@ -64,6 +86,10 @@ def test_every_example_is_owned_by_one_isolated_app():
             "primitives.family.loop",
             "primitives.family.fulfilment",
             "primitives.family.finalize",
+            "primitives.parallel-family.root",
+            "primitives.parallel-family.identity",
+            "primitives.parallel-family.employment",
+            "primitives.parallel-family.financial",
         },
     }
     for app, expected in apps.items():

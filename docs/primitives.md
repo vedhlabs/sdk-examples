@@ -69,3 +69,22 @@ reachable even when the family is deeply nested. Searching for
 `resource:order/ORDER-42` finds the whole family without scanning input JSON.
 
 Canonical source: [`src/primitives/family.py`](../src/primitives/family.py).
+
+## See three child Workflows run together
+
+`primitives.parallel-family.root` starts three owned children before it waits:
+identity, employment, and financial checks. Each child also starts two distinct
+Steps before joining them. The result is one parent, three direct children, and
+six overlapping functions on the execution-family waterfall.
+
+```bash
+python -m primitives.parallel_family_submit --application-id KYC-PARALLEL-DEMO --wait
+```
+
+Open the printed root Run in **Missions**. The tree shows all three children at
+the same depth. Switch the family view to **Timeline** to compare their real
+start times and function durations. Selecting any operation opens its recorded
+input and output without leaving the family.
+
+Canonical source:
+[`src/primitives/parallel_family.py`](../src/primitives/parallel_family.py).
