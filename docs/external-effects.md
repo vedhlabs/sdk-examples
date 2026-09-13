@@ -10,22 +10,30 @@ Wrap the provider call with `app.effect` so the uncertainty becomes a durable
 receipt instead of a blind retry:
 
 ```python
+from aga_runtime import errors
+
 KEY = f"order:{order['id']}:charge"
 
-return app.effect(
-    "charge",
-    lambda: provider.charge(
-        order,
+try:
+    return app.effect(
+        "charge",
+        lambda: provider.charge(
+            order,
+            idempotency_key=KEY,
+            connect_timeout=2,
+            read_timeout=8,
+        ),
         idempotency_key=KEY,
-        connect_timeout=2,
-        read_timeout=8,
-    ),
-    idempotency_key=KEY,
-    provider="payments",
-    endpoint="charge",
-    request={"order_id": order["id"], "amount": order["total"]},
-    not_applied_on=(CardDeclined,),
-)
+        provider="payments",
+        endpoint="charge",
+        request={"order_id": order["id"], "amount": order["total"]},
+        not_applied_on=(CardDeclined,),
+    )
+except errors.EffectAlreadyApplied:
+    receipt = provider.find_by_idempotency_key(KEY, timeout=5)
+    if receipt is None:
+        raise
+    return receipt
 ```
 
 `CardDeclined` is illustrative: list an exception in `not_applied_on` only when
@@ -48,7 +56,10 @@ else:
 Those final three functions stand for an application-owned operator tool that
 submits provider evidence through Aga's effect-reconciliation resource. They are
 not extra workflow calls. If Aga records `reconciled_not_applied`, the next replay
-may enter the callable inside the same `app.effect` again, using the same key.
+may enter the callable inside the same `app.effect` again, using the same key. If
+Aga records `reconciled_committed`, `app.effect` raises `EffectAlreadyApplied`
+instead of repeating the mutation. The Step then looks up and returns the original
+provider receipt with that key, as the example above shows.
 
 The exception names are illustrative because every provider library differs. The
 order of decisions is the contract:
@@ -68,7 +79,9 @@ The checkout mock makes the two useful provider operations concrete:
 - [`payments.charge`](../src/checkout/adapters/payments.py) applies an effect once
   for a stable key;
 - [`payments.find_charge`](../src/checkout/adapters/payments.py) retrieves the
-  original receipt without applying the effect again.
+  original receipt without applying the effect again;
+- [`shipping.find_shipment`](../src/checkout/adapters/shipping.py) does the same
+  for shipment creation.
 
 [`ExampleStore`](../src/example_support/store.py) is a tiny SQLite stand-in for a
 provider. Its database is deliberately separate from Aga so retry behavior stays
