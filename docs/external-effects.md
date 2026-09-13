@@ -5,33 +5,50 @@ the same transaction as a card network, email service, warehouse, or another
 company's API.
 
 Imagine that a provider accepts a charge and the connection drops before the
-worker receives the reply. Aga has no receipt to checkpoint, so the Step may run
-again. The safe adapter does not guess whether the charge happened:
+worker receives the reply. Aga cannot honestly call that a success or a failure.
+Wrap the provider call with `app.effect` so the uncertainty becomes a durable
+receipt instead of a blind retry:
 
 ```python
 KEY = f"order:{order['id']}:charge"
 
-try:
-    receipt = provider.charge(
+return app.effect(
+    "charge",
+    lambda: provider.charge(
         order,
         idempotency_key=KEY,
         connect_timeout=2,
         read_timeout=8,
-    )
-except ProviderConnectionLost:
-    receipt = provider.find_by_idempotency_key(KEY, timeout=5)
-    if receipt is None and provider.proved_absent(KEY):
-        receipt = provider.charge(
-            order,
-            idempotency_key=KEY,
-            connect_timeout=2,
-            read_timeout=8,
-        )
-    elif receipt is None:
-        raise OutcomeStillUnknown(KEY)
-
-return receipt
+    ),
+    idempotency_key=KEY,
+    provider="payments",
+    endpoint="charge",
+    request={"order_id": order["id"], "amount": order["total"]},
+    not_applied_on=(CardDeclined,),
+)
 ```
+
+`CardDeclined` is illustrative: list an exception in `not_applied_on` only when
+the provider contract proves that no change happened. A timeout, connection reset,
+HTTP 500, or malformed response is normally uncertain.
+
+After an uncertain outcome, the worker does not call the provider again. A trusted
+reconciler follows the original business key:
+
+```python
+receipt = provider.find_by_idempotency_key(KEY, timeout=5)
+if receipt is not None:
+    record_provider_committed(receipt)
+elif provider.proved_absent(KEY):
+    record_provider_not_applied()
+else:
+    escalate_for_review()
+```
+
+Those final three functions stand for an application-owned operator tool that
+submits provider evidence through Aga's effect-reconciliation resource. They are
+not extra workflow calls. If Aga records `reconciled_not_applied`, the next replay
+may enter the callable inside the same `app.effect` again, using the same key.
 
 The exception names are illustrative because every provider library differs. The
 order of decisions is the contract:
@@ -60,5 +77,7 @@ business operations without an Aga receipt, looks them up by key, and records or
 escalates the provider's answer.
 
 `client.apply_once` only reserves an Aga-side key. It cannot atomically wrap a
-network request. Aga does not currently expose an `app.effect` API; such a public
-cross-SDK, wire, and storage contract remains a separate decision.
+network request. `app.effect` records what Aga knows, refuses blind re-execution
+after an uncertain attempt, and keeps the Run from normal retention while the
+question is open. It cannot make a provider idempotent or interrupt a blocked
+socket; those remain application and provider responsibilities.

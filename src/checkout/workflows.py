@@ -7,19 +7,36 @@ from checkout.app import app
 @app.step(
     retry=aga.RetryPolicy(max_attempts=5),
     timeout=30,
+    attempt_timeout=10,
     pivot=True,
 )
 def charge_order(order: dict) -> dict:
-    return payments.charge(
-        customer_id=order["customer_id"],
-        amount=order["total"],
-        idempotency_key=f"order:{order['id']}:charge",
+    key = f"order:{order['id']}:charge"
+    return app.effect(
+        "charge",
+        lambda: payments.charge(
+            customer_id=order["customer_id"],
+            amount=order["total"],
+            idempotency_key=key,
+        ),
+        idempotency_key=key,
+        provider="payments",
+        endpoint="charge",
+        request={"order_id": order["id"], "amount": order["total"]},
     )
 
 
-@app.step(retry=aga.RetryPolicy(max_attempts=5), timeout=30)
+@app.step(retry=aga.RetryPolicy(max_attempts=5), timeout=30, attempt_timeout=10)
 def create_shipment(order: dict) -> dict:
-    return shipping.create(order=order, idempotency_key=f"order:{order['id']}:shipment")
+    key = f"order:{order['id']}:shipment"
+    return app.effect(
+        "create-shipment",
+        lambda: shipping.create(order=order, idempotency_key=key),
+        idempotency_key=key,
+        provider="shipping",
+        endpoint="create",
+        request=order,
+    )
 
 
 @app.workflow(name="checkout", version="1")

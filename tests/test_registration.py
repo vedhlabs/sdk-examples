@@ -133,3 +133,5 @@ def test_schedules_and_rpc_method_are_declared():
 def test_compact_checkout_places_the_pivot_at_payment():
     assert charge_order.__aga_spec__.pivot is True
     assert create_shipment.__aga_spec__.pivot is False
+    assert charge_order.__aga_spec__.attempt_timeout == 10
+    assert create_shipment.__aga_spec__.attempt_timeout == 10
