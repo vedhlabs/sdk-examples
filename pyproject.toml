@@ -10,7 +10,8 @@ dependencies = ["aga-runtime>=0.4.2,<0.5"]
 
 [project.optional-dependencies]
 alpaca = ["httpx>=0.28"]
-dev = ["pytest>=8", "ruff>=0.9"]
+agents = ["strands-agents>=1.55.1,<2"]
+dev = ["pytest>=8", "ruff>=0.9", "strands-agents>=1.55.1,<2"]
 
 [build-system]
 requires = ["hatchling==1.27.0"]
@@ -18,6 +19,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.hatch.build]
+exclude = ["/.state", "/.venv*", "/audit.log"]
 
 [tool.hatch.build.targets.wheel]
 packages = [
@@ -29,6 +33,7 @@ packages = [
   "src/lending",
   "src/trading",
   "src/primitives",
+  "src/agent_quickstart",
 ]
 
 [tool.pytest.ini_options]
