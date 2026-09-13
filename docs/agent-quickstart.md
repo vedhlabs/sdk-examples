@@ -16,17 +16,19 @@ that unfinished invocation are therefore **at least once**.
 
 ## Install and run
 
-Start the normal tutorial server, then install the Agent extra:
+Start the normal tutorial server, then install the core SDK, the separate Strands
+adapter, and the example:
 
 ```bash
 python -m pip install -e ../sdk-python
-python -m pip install -e ".[agents]"
+python -m pip install -e ../sdk-python/packages/aga-strands
+python -m pip install -e .
 python -m agent_quickstart.worker
 ```
 
-The first command uses the sibling SDK checkout containing this adapter. A later
-package release can replace it; this implementation checkpoint does not publish a
-package.
+The first two commands use the sibling source checkouts. A later package release
+can replace them with `python -m pip install aga-runtime aga-strands`; this
+implementation checkpoint does not publish either package.
 
 From another terminal, submit without waiting:
 

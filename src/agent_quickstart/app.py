@@ -1,6 +1,6 @@
 """One Aga App owns this service's workflow, Agent Step, and worker."""
 
-from aga_runtime.integrations.strands import StrandsAdapter
+from aga_strands import StrandsAdapter
 
 from example_support.config import create_app
 

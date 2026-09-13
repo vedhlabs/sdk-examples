@@ -6,12 +6,16 @@ requires-python = ">=3.10"
 readme = "README.md"
 license = "Apache-2.0"
 authors = [{ name = "Vedh Labs" }]
-dependencies = ["aga-runtime>=0.4.2,<0.5"]
+dependencies = ["aga-runtime>=0.4.3,<0.5"]
 
 [project.optional-dependencies]
 alpaca = ["httpx>=0.28"]
-agents = ["strands-agents>=1.55.1,<2"]
-dev = ["pytest>=8", "ruff>=0.9", "strands-agents>=1.55.1,<2"]
+agents = ["aga-strands>=0.1,<0.2"]
+dev = ["aga-strands>=0.1,<0.2", "pytest>=8", "ruff>=0.9"]
+
+[tool.uv.sources]
+aga-runtime = { path = "../sdk-python", editable = true }
+aga-strands = { path = "../sdk-python/packages/aga-strands", editable = true }
 
 [build-system]
 requires = ["hatchling==1.27.0"]

@@ -1,6 +1,6 @@
 import asyncio
 
-from aga_runtime.integrations.strands import StrandsAdapter
+from aga_strands import StrandsAdapter
 
 from agent_quickstart import bedrock, workflows
 
