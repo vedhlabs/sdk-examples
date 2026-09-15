@@ -58,9 +58,14 @@ def test_optional_bedrock_factory_has_no_import_time_network_call(monkeypatch):
 
 
 def test_bedrock_settings_prefer_explicit_region_then_aws_region_then_default(monkeypatch):
-    for name in ("BEDROCK_MODEL_ID", "BEDROCK_REGION", "AWS_REGION"):
+    for name in ("BEDROCK_MODEL_ID", "BEDROCK_REGION", "AWS_REGION", "AWS_DEFAULT_REGION"):
         monkeypatch.delenv(name, raising=False)
     assert bedrock.bedrock_settings() == (bedrock.DEFAULT_MODEL_ID, bedrock.DEFAULT_REGION)
+
+    # AWS_DEFAULT_REGION is what most shells and CI images actually set; ignoring
+    # it would send a correctly configured user to the wrong region.
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-central-1")
+    assert bedrock.bedrock_settings()[1] == "eu-central-1"
 
     monkeypatch.setenv("AWS_REGION", "us-west-2")
     assert bedrock.bedrock_settings()[1] == "us-west-2"

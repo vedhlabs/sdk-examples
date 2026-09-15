@@ -26,7 +26,10 @@ def bedrock_settings() -> tuple[str, str]:
     """Resolve model and region from the environment, with explicit defaults."""
     return (
         os.environ.get("BEDROCK_MODEL_ID", DEFAULT_MODEL_ID),
-        os.environ.get("BEDROCK_REGION") or os.environ.get("AWS_REGION") or DEFAULT_REGION,
+        os.environ.get("BEDROCK_REGION")
+        or os.environ.get("AWS_REGION")
+        or os.environ.get("AWS_DEFAULT_REGION")
+        or DEFAULT_REGION,
     )
 
 
