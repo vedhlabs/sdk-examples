@@ -35,8 +35,9 @@ def test_optional_bedrock_factory_has_no_import_time_network_call(monkeypatch):
     created = {}
 
     class Model:
-        def __init__(self, *, model_id):
+        def __init__(self, *, model_id, region_name):
             created["model_id"] = model_id
+            created["region_name"] = region_name
 
     class Agent:
         def __init__(self, **kwargs):
@@ -45,8 +46,28 @@ def test_optional_bedrock_factory_has_no_import_time_network_call(monkeypatch):
     monkeypatch.setattr(bedrock, "BedrockModel", Model)
     monkeypatch.setattr(bedrock, "Agent", Agent)
     monkeypatch.setenv("BEDROCK_MODEL_ID", "test-model")
+    monkeypatch.setenv("BEDROCK_REGION", "eu-west-1")
 
     bedrock.build_bedrock_agent()
 
     assert created["model_id"] == "test-model"
+    # Region is passed explicitly. A session default with no Anthropic access
+    # is a permanent failure, and this example hit exactly that.
+    assert created["region_name"] == "eu-west-1"
     assert created["agent"]["name"] == "bedrock-research"
+
+
+def test_bedrock_settings_prefer_explicit_region_then_aws_region_then_default(monkeypatch):
+    for name in ("BEDROCK_MODEL_ID", "BEDROCK_REGION", "AWS_REGION"):
+        monkeypatch.delenv(name, raising=False)
+    assert bedrock.bedrock_settings() == (bedrock.DEFAULT_MODEL_ID, bedrock.DEFAULT_REGION)
+
+    monkeypatch.setenv("AWS_REGION", "us-west-2")
+    assert bedrock.bedrock_settings()[1] == "us-west-2"
+
+    monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
+    assert bedrock.bedrock_settings()[1] == "us-east-1"
+
+    # The default is a single-geo `us.` profile, not a `global.` one: the Anthropic
+    # use-case gate propagates per region, and global routing lands on whichever.
+    assert bedrock.DEFAULT_MODEL_ID.startswith("us.")
