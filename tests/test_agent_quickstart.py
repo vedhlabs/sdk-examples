@@ -24,7 +24,7 @@ def test_agent_is_bound_as_one_opaque_operation():
     assert workflows.research.manifest.durability_mode == "opaque"
     assert workflows.research.manifest.framework == "strands-agents"
     assert workflows.research._step._spec.operation_class == "agent"
-    assert set(workflows.app._catalog.workflows) == {"investigate"}
+    assert set(workflows.app._catalog.workflows) == {"investigate", "place_order"}
 
 
 def test_factory_never_reuses_mutable_agent_state():
@@ -71,3 +71,49 @@ def test_bedrock_settings_prefer_explicit_region_then_aws_region_then_default(mo
     # The default is a single-geo `us.` profile, not a `global.` one: the Anthropic
     # use-case gate propagates per region, and global routing lands on whichever.
     assert bedrock.DEFAULT_MODEL_ID.startswith("us.")
+
+
+def test_checkout_tool_reaches_app_effect_through_the_real_strands_loop():
+    # The model asks for charge_card; Strands runs it on a to_thread worker; the
+    # tool calls app.effect and must find the executing Step from that thread.
+    # A fake client records the receipt the SDK proposes.
+    import threading
+    from unittest.mock import Mock
+
+    from aga_runtime.protocol.wire import Effect, EffectClass, EffectState
+    from aga_runtime.workflow._runtime import step_binding
+
+    class Effects:
+        def __init__(self):
+            self.proposed, self.settled = [], []
+
+        def propose(self, effect_id, operation_id, **kw):
+            self.proposed.append({"id": effect_id, "operation_id": operation_id, **kw})
+            return Effect(id=effect_id, state=EffectState.AUTHORIZED, generation=1), False
+
+        def settle(self, effect_id, state, **kw):
+            self.settled.append(state)
+            return Effect(id=effect_id, state=state)
+
+    client = Mock()
+    client.effects = Effects()
+    agent = workflows.build_checkout_agent()
+    main_thread = threading.get_ident()
+    with step_binding.bound(client, "run-1.strands.checkout.1", 3):
+        result = asyncio.run(agent.invoke_async("Please charge 1200 cents."))
+
+    assert str(result).strip() == "Checkout complete: charged 1200 minor units."
+    assert len(client.effects.proposed) == 1
+    receipt = client.effects.proposed[0]
+    assert receipt["operation_id"] == "run-1.strands.checkout.1"
+    assert receipt["effect_class"] is EffectClass.MUTATE
+    assert receipt["idempotency_digest"]
+    assert client.effects.settled[-1] is EffectState.COMMITTED
+    assert threading.get_ident() == main_thread  # the test itself stayed put
+    assert result.metrics.accumulated_usage["totalTokens"] == 46
+
+
+def test_checkout_agent_is_bound_with_a_pricer_the_ceiling_can_use():
+    assert workflows.checkout._step._spec.operation_class == "agent"
+    assert workflows.local_price_micros("deterministic-checkout-v1", 12, 6) == 42
+    assert set(workflows.app._catalog.workflows) == {"investigate", "place_order"}

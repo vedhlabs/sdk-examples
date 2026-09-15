@@ -14,6 +14,26 @@ crash, Aga replays that result and does not create another Agent. If the invocat
 did not commit, Aga may try the whole invocation again. Model calls and tools inside
 that unfinished invocation are therefore **at least once**.
 
+## When to use it
+
+Reach for `aga-strands` when an Agent invocation is one unit of durable work: you
+want it to survive a worker crash, replay its committed answer instead of paying
+for a second inference, stay inside the Namespace's token and cost ceilings, and
+have every tool that changes the outside world protected by a receipt. Research,
+classification, drafting, a checkout assistant — anything where the *answer* is
+what you keep.
+
+Use plain `@app.step` functions when there is no model loop to run; Aga's own
+operations are cheaper and fully replayable.
+
+Hold off when you need each model or tool call *inside* the loop to be its own
+durable operation — per-call replay, `max_tool_calls` and `max_turns` enforcement,
+or an operations timeline of the loop's internals. That is durable-native
+execution, which needs the workflow to own the loop and is a separate, still
+proposed decision. Opaque mode is honest about the trade: an uncommitted internal
+call may repeat after a crash, and only the receipts on mutating tools stop a
+repeat from reaching a provider twice.
+
 ## Install and run
 
 For this read-only local Agent, either the normal tutorial server or the
@@ -64,6 +84,16 @@ factory. Give that factory to `strands_adapter.agent(...)`, configure AWS creden
 through the normal provider chain, and set `BEDROCK_MODEL_ID` when you need another
 model. Aga does not import or contact Bedrock on its core import path.
 
+Two things this example learned the hard way. Bedrock is regional and Strands
+honours `region_name`, so the factory resolves `BEDROCK_REGION`, then `AWS_REGION`,
+then `us-east-1` and passes it explicitly — a session default with no Anthropic
+access fails permanently, and that is what an earlier run of this example hit.
+And Anthropic models need the account's use-case form filed; until then every call
+fails with `ResourceNotFoundException: Model use case details have not been
+submitted for this account`, and that state was seen to propagate unevenly across
+regions for a while. The default is a single-geo `us.` profile for that reason —
+a `global.` profile routes wherever it likes.
+
 Provider and framework retries must be kept bounded so they do not multiply Aga's
 retry policy. Configure provider connect and response timeouts below the Aga Step's
 attempt timeout.
@@ -75,6 +105,46 @@ PostgreSQL and an unrelated payment, ticket, email, or infrastructure API. A
 mutating Strands tool must call `app.effect(...)` with a stable idempotency key and
 support reconciliation when the provider outcome is unknown. Read-only tools do not
 need an effect receipt.
+
+[`tools.py`](../src/agent_quickstart/tools.py) shows the shape, and `checkout` in
+[`workflows.py`](../src/agent_quickstart/workflows.py) binds it with a price
+function so the Namespace's `max_cost_micros` ceiling can see the agent:
+
+```python
+@tool
+def charge_card(amount: int) -> str:
+    """Charge the customer's card."""
+    return app.effect(
+        "charge",
+        lambda: psp.charge(amount),
+        idempotency_key=f"order-{amount}",
+        provider="example-psp",
+        endpoint="POST /charges",
+    )
+
+checkout = strands_adapter.agent(
+    "checkout",
+    factory=build_checkout_agent,       # Agent(model=..., tools=[charge_card])
+    model="deterministic-checkout-v1",
+    pricer=local_price_micros,          # (model, input_tokens, output_tokens) -> micros
+)
+```
+
+Three things are doing work here. Strands runs `charge_card` on a worker thread,
+and `app.effect` still finds the executing Step because the binding is
+context-local. The receipt's identity is the idempotency key's digest, so charging
+two orders in one invocation yields two receipts rather than one refusal. And the
+price function is yours: the adapter ships no rate table, because a stale one
+under-reports, which is the one direction a spend ceiling cannot survive.
+
+Run it with the local, cloud-free model:
+
+```bash
+python -m agent_quickstart.submit --checkout 1200 --wait
+```
+
+[`local_tool_model.py`](../src/agent_quickstart/local_tool_model.py) asks for the
+tool on turn one and confirms on turn two, through Strands' real loop.
 
 The released tutorial server does not advertise effect receipts. Before trying a
 mutating tool, stop that tutorial stack and start the contributor stack with
