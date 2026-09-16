@@ -86,8 +86,9 @@ model. Aga does not import or contact Bedrock on its core import path.
 
 Two things this example learned the hard way. Bedrock is regional and Strands
 honours `region_name`, so the factory resolves `BEDROCK_REGION`, then `AWS_REGION`,
-then `us-east-1` and passes it explicitly — a session default with no Anthropic
-access fails permanently, and that is what an earlier run of this example hit.
+then `AWS_DEFAULT_REGION`, then `us-east-1` and passes it explicitly — a session
+default with no Anthropic access fails permanently, and that is what an earlier run
+of this example hit.
 And Anthropic models need the account's use-case form filed; until then every call
 fails with `ResourceNotFoundException: Model use case details have not been
 submitted for this account`, and that state was seen to propagate unevenly across
@@ -112,14 +113,15 @@ function so the Namespace's `max_cost_micros` ceiling can see the agent:
 
 ```python
 @tool
-def charge_card(amount: int) -> str:
+def charge_card(order_id: str, amount: int) -> str:
     """Charge the customer's card."""
     return app.effect(
         "charge",
-        lambda: psp.charge(amount),
-        idempotency_key=f"order-{amount}",
+        lambda: psp.charge(order_id, amount),
+        idempotency_key=f"charge:{order_id}",
         provider="example-psp",
         endpoint="POST /charges",
+        request={"order_id": order_id, "amount": amount},
     )
 
 checkout = strands_adapter.agent(
@@ -129,6 +131,11 @@ checkout = strands_adapter.agent(
     pricer=local_price_micros,          # (model, input_tokens, output_tokens) -> micros
 )
 ```
+
+The key comes from the immutable order identity, not the amount. Two orders for
+the same amount are still two external actions, while a retry of one order keeps
+the same provider key. The request fingerprint separately catches an accidental
+change to that order's amount.
 
 Three things are doing work here. Strands runs `charge_card` on a worker thread,
 and `app.effect` still finds the executing Step because the binding is
@@ -140,7 +147,7 @@ under-reports, which is the one direction a spend ceiling cannot survive.
 Run it with the local, cloud-free model:
 
 ```bash
-python -m agent_quickstart.submit --checkout 1200 --wait
+python -m agent_quickstart.submit --checkout 1200 --order-id tutorial-order-1 --wait
 ```
 
 [`local_tool_model.py`](../src/agent_quickstart/local_tool_model.py) asks for the

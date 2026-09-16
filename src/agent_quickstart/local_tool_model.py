@@ -14,7 +14,8 @@ from typing import Any
 
 from strands.models import Model
 
-_AMOUNT = re.compile(r"(\d+)")
+_ORDER = re.compile(r"order ([A-Za-z0-9][A-Za-z0-9._:-]*)")
+_AMOUNT = re.compile(r"for (\d+) cents")
 
 
 class LocalCheckoutModel(Model):
@@ -42,10 +43,10 @@ class LocalCheckoutModel(Model):
         self.turns += 1
         yield {"messageStart": {"role": "assistant"}}
         if self.turns == 1:
-            amount = _requested_amount(messages)
+            order_id, amount = _requested_order(messages)
             start = {"toolUse": {"toolUseId": "charge-1", "name": "charge_card"}}
             yield {"contentBlockStart": {"start": start}}
-            arguments = json.dumps({"amount": amount})
+            arguments = json.dumps({"order_id": order_id, "amount": amount})
             yield {"contentBlockDelta": {"delta": {"toolUse": {"input": arguments}}}}
             yield {"contentBlockStop": {}}
             yield {"messageStop": {"stopReason": "tool_use"}}
@@ -72,13 +73,16 @@ def _usage(input_tokens: int, output_tokens: int) -> dict[str, Any]:
     }
 
 
-def _requested_amount(messages: list[dict[str, Any]]) -> int:
+def _requested_order(messages: list[dict[str, Any]]) -> tuple[str, int]:
     for message in reversed(messages):
         for block in reversed(message.get("content", [])):
             text = block.get("text") if isinstance(block, dict) else None
-            if isinstance(text, str) and (found := _AMOUNT.search(text)):
-                return int(found.group(1))
-    return 1200
+            if not isinstance(text, str):
+                continue
+            order, amount = _ORDER.search(text), _AMOUNT.search(text)
+            if order and amount:
+                return order.group(1), int(amount.group(1))
+    return "example-order", 1200
 
 
 def _latest_tool_result(messages: list[dict[str, Any]]) -> str:

@@ -105,9 +105,13 @@ def test_checkout_tool_reaches_app_effect_through_the_real_strands_loop():
     agent = workflows.build_checkout_agent()
     main_thread = threading.get_ident()
     with step_binding.bound(client, "run-1.strands.checkout.1", 3):
-        result = asyncio.run(agent.invoke_async("Please charge 1200 cents."))
+        result = asyncio.run(
+            agent.invoke_async("Please charge order order-42 for 1200 cents.")
+        )
 
-    assert str(result).strip() == "Checkout complete: charged 1200 minor units."
+    assert str(result).strip() == (
+        "Checkout complete: charged 1200 minor units for order order-42."
+    )
     assert len(client.effects.proposed) == 1
     receipt = client.effects.proposed[0]
     assert receipt["operation_id"] == "run-1.strands.checkout.1"

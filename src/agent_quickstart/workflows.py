@@ -69,5 +69,5 @@ checkout = strands_adapter.agent(
 
 
 @app.workflow()
-async def place_order(amount: int) -> str:
-    return await checkout(f"Please charge {amount} cents.")
+async def place_order(order_id: str, amount: int) -> str:
+    return await checkout(f"Please charge order {order_id} for {amount} cents.")
