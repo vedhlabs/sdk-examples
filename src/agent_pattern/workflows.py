@@ -44,7 +44,7 @@ def policy_check(results: list[dict]) -> dict:
 
 
 @app.step(operation_class=aga.OperationClass.TOOL, retry=aga.RetryPolicy(max_attempts=1))
-def publish_decision(case_id: str) -> dict:
+def publish_decision(case_id: str, approval_gate_id: str) -> dict:
     """Only this Step may mutate the provider, under an Aga effect receipt."""
     key = f"case:{case_id}:decision:clear:v1"
     try:
@@ -55,6 +55,7 @@ def publish_decision(case_id: str) -> dict:
             provider="example-case-provider",
             endpoint="POST /case-decisions",
             request={"case_id": case_id, "decision": "clear"},
+            approval_gate=approval_gate_id,
         )
     except errors.EffectAlreadyApplied:
         receipt = provider.find(key)
@@ -86,6 +87,7 @@ async def review_case(case: dict) -> dict:
     proposal = aga.Approval(
         "case_publish_approval",
         action="POST /case-decisions",
+        provider="example-case-provider",
         arguments={"case_id": case_id, "decision": "clear"},
         mutating=True,
         risk="medium",
@@ -95,11 +97,12 @@ async def review_case(case: dict) -> dict:
         eligible_claims=("team:risk",),
     )
     try:
-        answer = await app.signal(proposal, timeout=float(case.get("approval_timeout", 120)))
+        gate = app.signal(proposal, timeout=float(case.get("approval_timeout", 120)))
+        answer = await gate
     except aga.PermissionDenied:
         return {"case_id": case_id, "status": "not_approved"}
     if not answer.get("approved"):
         return {"case_id": case_id, "status": "not_approved"}
 
-    receipt = await publish_decision(case_id)
+    receipt = await publish_decision(case_id, gate.id)
     return {"case_id": case_id, "status": "published", "receipt": receipt}

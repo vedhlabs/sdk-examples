@@ -82,3 +82,21 @@ def test_parallel_tools_are_admitted_before_join(monkeypatch):
     assert asyncio.run(workflows.review_case.__wrapped__({"case_id": "case-2"}))[
         "status"
     ] == "blocked"
+
+
+def test_publish_step_carries_the_approval_into_the_provider_effect(monkeypatch):
+    observed = {}
+
+    def effect(name, call, **options):
+        observed.update({"name": name, **options})
+        return call()
+
+    monkeypatch.setattr(workflows.app, "effect", effect)
+    monkeypatch.setattr(workflows.provider, "publish", lambda *_args: {"published": True})
+
+    result = workflows.publish_decision.__wrapped__("case-3", "run1.review.1")
+
+    assert result == {"published": True}
+    assert observed["approval_gate"] == "run1.review.1"
+    assert observed["endpoint"] == "POST /case-decisions"
+    assert observed["request"] == {"case_id": "case-3", "decision": "clear"}

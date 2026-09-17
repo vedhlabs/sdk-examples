@@ -73,13 +73,17 @@ closed. The approver uses `client.gates.get(id)` and
 `client.gates.decide(question, outcome, command_id=...)`, not a worker or admin
 credential. An auth-disabled server cannot decide a verified gate.
 
-The gate does **not** force later application code to call only the approved
-effect. This example makes that connection explicitly in the workflow: it checks
-the gate result before `publish_decision`. A separate future engine contract
-would be needed to bind arbitrary downstream provider calls to the approved
-action. This source has local tests, not a production release or hosted identity
-integration. Do not treat this pattern alone as authorization for real money or
-other high-stakes mutations.
+The workflow passes the gate Handle's ID into `publish_decision`, which passes
+it to `app.effect` alongside the exact provider, action, and request shown to
+the approver. The engine checks those fields and the verified vote, then records
+the gate's one-effect binding and effect receipt in one origin transaction. A
+different effect ID cannot reuse that vote; a worker-supplied boolean cannot
+authorize a gated effect. The gate does **not** prevent arbitrary Python code
+from making a direct provider call outside `app.effect`, so the application's
+provider adapter must keep all mutations inside that boundary. This source has
+local tests, not a production release or hosted identity integration. Do not
+treat this pattern alone as authorization for real money or other high-stakes
+mutations.
 
 ## Language-neutral contract
 
