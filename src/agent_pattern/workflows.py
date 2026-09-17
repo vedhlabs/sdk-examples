@@ -38,7 +38,7 @@ def watchlist_check(case: dict) -> dict:
     return {"name": "watchlist_check", "passed": not case.get("watchlist_hit", False)}
 
 
-@app.step(operation_class=aga.OperationClass.GATE)
+@app.step()
 def policy_check(results: list[dict]) -> dict:
     return {"allowed": all(result["passed"] for result in results)}
 
