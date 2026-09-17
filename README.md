@@ -112,6 +112,7 @@ child must outlive its parent.
 | [Parallel KYC review](docs/kyc-parallel.md) | `quickstart.kyc_parallel` | five distinct durable checks, one sync caller, one join, and an observable waterfall |
 | [Parallel workflow family](docs/primitives.md#see-three-child-workflows-run-together) | `primitives.parallel_family` | one parent, three owned children, and six overlapping durable checks |
 | [Strands Agent](docs/agent-quickstart.md) | `agent_quickstart` | one opaque Agent invocation, deterministic local models, fresh state per attempt, a mutating tool with a durable receipt, cost the ceiling can see, and optional Bedrock; says when to use the adapter and when not |
+| [Workflow-owned agent pattern](docs/agent-pattern.md) | `agent_pattern` | committed model proposal, parallel read-only tools, policy check, manual gate, and one idempotent effect; a local research fixture, not a production approval service |
 | [Inside Aga execution lab](docs/inside-execution.md) | `quickstart.inside_execution` | five distinct functions, all six caller/placement and sequential/parallel combinations, synthetic timing, and resource lookup |
 | [Quickstart](docs/quickstart.md)          | `quickstart`          | sync waiting, async submit, workflow placement, crash recovery, schedules                               |
 | [Checkout and reports](docs/checkout.md)  | `checkout`, `reports` | provider idempotency, compensation shape, engine cron                                                   |

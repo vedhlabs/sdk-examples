@@ -38,6 +38,7 @@ packages = [
   "src/trading",
   "src/primitives",
   "src/agent_quickstart",
+  "src/agent_pattern",
 ]
 
 [tool.pytest.ini_options]
