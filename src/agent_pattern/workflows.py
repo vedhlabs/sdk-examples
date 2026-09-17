@@ -92,6 +92,7 @@ async def review_case(case: dict) -> dict:
         reason="release the verified case decision",
         requester="agent-pattern",
         evidence={"identity_passed": True, "watchlist_passed": True},
+        eligible_claims=("team:risk",),
     )
     try:
         answer = await app.signal(proposal, timeout=float(case.get("approval_timeout", 120)))

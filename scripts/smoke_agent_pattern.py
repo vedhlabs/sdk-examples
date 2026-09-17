@@ -1,7 +1,8 @@
 """Opt-in local PostgreSQL smoke for parallel checks and approval-before-effect.
 
-Set AGA_URL to an isolated current-generation Aga server. The script creates a
-fresh Namespace and a temporary provider store; it makes no paid model call.
+Set AGA_URL, AGA_NAMESPACE, AGA_API_KEY (worker) and AGA_APPROVER_KEY for an
+isolated authenticated Aga server. It uses a temporary provider store and
+makes no paid model call.
 """
 
 from __future__ import annotations
@@ -34,25 +35,29 @@ def stop_worker(process: subprocess.Popen[bytes]) -> None:
 
 
 def main() -> None:
-    if not os.environ.get("AGA_URL"):
-        raise RuntimeError("AGA_URL must point to an isolated current-generation server")
+    required = ("AGA_URL", "AGA_NAMESPACE", "AGA_API_KEY", "AGA_APPROVER_KEY")
+    missing = [name for name in required if not os.environ.get(name)]
+    if missing:
+        raise RuntimeError(f"set {', '.join(missing)} for an authenticated Aga server")
 
     with tempfile.TemporaryDirectory(prefix="aga-agent-pattern-") as temporary:
         os.environ["AGA_EXAMPLE_STATE"] = str(Path(temporary) / "provider.sqlite3")
 
-        from example_support.config import connect, create_namespace
-
-        os.environ["AGA_NAMESPACE"] = create_namespace(
-            f"Agent pattern smoke {uuid.uuid4().hex[:10]}"
-        )
+        from aga_runtime import ApprovalOutcome
+        from aga_runtime.client import Client
 
         from agent_pattern.app import app
         from agent_pattern.provider import SCOPE
         from agent_pattern.workflows import review_case
+        from example_support.config import connect
         from example_support.promises import pending_promise
         from example_support.store import store
 
         client = connect()
+        approver = Client(
+            os.environ["AGA_URL"], namespace=os.environ["AGA_NAMESPACE"],
+            api_key=os.environ["AGA_APPROVER_KEY"],
+        )
         with tempfile.TemporaryFile(mode="w+") as output:
             process = launch_worker(output)
             try:
@@ -63,8 +68,13 @@ def main() -> None:
                 gate = pending_promise(client, approved.id, "case_publish_approval", timeout_s=30)
                 key = f"case:{case_id}:decision:clear:v1"
                 assert store.effect(SCOPE, key) is None, "provider mutated before approval"
-                client.resolve(gate.id, b'{"approved":true,"reviewer":"local-smoke"}')
-                client.resolve(gate.id, b'{"approved":true,"reviewer":"local-smoke"}')
+                question = approver.gates.get(gate.id)
+                approver.gates.decide(
+                    question, ApprovalOutcome.APPROVED, command_id=f"{run_id}-approve"
+                )
+                approver.gates.decide(
+                    question, ApprovalOutcome.APPROVED, command_id=f"{run_id}-approve"
+                )
                 result = approved.result(timeout=30)
                 assert result["status"] == "published", result
                 assert store.effect_calls(SCOPE, key) == 1
@@ -82,7 +92,10 @@ def main() -> None:
                 denied_gate = pending_promise(
                     client, denied.id, "case_publish_approval", timeout_s=30
                 )
-                client.resolve(denied_gate.id, b'{"approved":false,"reviewer":"local-smoke"}')
+                approver.gates.decide(
+                    approver.gates.get(denied_gate.id), ApprovalOutcome.REJECTED,
+                    command_id=f"{denied.id}-reject",
+                )
                 assert denied.result(timeout=30)["status"] == "not_approved"
                 assert store.effect(SCOPE, f"case:{denied_id}:decision:clear:v1") is None
 
@@ -111,6 +124,8 @@ def main() -> None:
             finally:
                 stop_worker(process)
                 app.close()
+                approver.close()
+                client.close()
 
 
 if __name__ == "__main__":
