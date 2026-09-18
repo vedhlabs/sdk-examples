@@ -1,4 +1,8 @@
 import asyncio
+import os
+import subprocess
+import sys
+from pathlib import Path
 
 from aga_strands import StrandsAdapter
 
@@ -55,6 +59,10 @@ def test_optional_bedrock_factory_has_no_import_time_network_call(monkeypatch):
     # is a permanent failure, and this example hit exactly that.
     assert created["region_name"] == "eu-west-1"
     assert created["agent"]["name"] == "bedrock-research"
+
+    bedrock.build_bedrock_agent(model_id="pinned-model", region="ap-south-1")
+    assert created["model_id"] == "pinned-model"
+    assert created["region_name"] == "ap-south-1"
 
 
 def test_bedrock_settings_prefer_explicit_region_then_aws_region_then_default(monkeypatch):
@@ -126,3 +134,45 @@ def test_checkout_agent_is_bound_with_a_pricer_the_ceiling_can_use():
     assert workflows.checkout._step._spec.operation_class == "agent"
     assert workflows.local_price_micros("deterministic-checkout-v1", 12, 6) == 42
     assert set(workflows.app._catalog.workflows) == {"investigate", "place_order"}
+
+
+def test_bedrock_workflow_registers_only_with_explicit_model_and_region():
+    source = str(Path(__file__).resolve().parents[1] / "src")
+    env = {**os.environ, "PYTHONPATH": source}
+    env.pop("AGA_AGENT_BEDROCK", None)
+    local = subprocess.run(
+        [sys.executable, "-c", "from agent_quickstart import worker; "
+         "print(sorted(worker.app._catalog.workflows))"],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert "investigate_bedrock" not in local.stdout
+
+    env["AGA_AGENT_BEDROCK"] = "1"
+    env.pop("BEDROCK_MODEL_ID", None)
+    env.pop("BEDROCK_REGION", None)
+    missing = subprocess.run(
+        [sys.executable, "-c", "import agent_quickstart.worker"],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert missing.returncode != 0
+    assert "explicit BEDROCK_MODEL_ID and BEDROCK_REGION" in missing.stderr
+
+    env["BEDROCK_MODEL_ID"] = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+    env["BEDROCK_REGION"] = "ap-south-1"
+    ready = subprocess.run(
+        [sys.executable, "-c", "from agent_quickstart import worker; "
+         "print(sorted(worker.app._catalog.workflows)); "
+         "print(worker.bedrock_workflows.research_bedrock.manifest.model)"],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert "investigate_bedrock" in ready.stdout
+    assert env["BEDROCK_MODEL_ID"] in ready.stdout

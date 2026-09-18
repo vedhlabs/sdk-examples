@@ -6,10 +6,9 @@ not repeat them:
 - Bedrock is regional and Strands honours ``region_name``. A session whose default
   region has no Anthropic access fails permanently; pass the region explicitly.
 - Anthropic models on Bedrock need the account's use-case form filed. Until then
-  every call fails with ``ResourceNotFoundException: Model use case details have
-  not been submitted for this account``, and the state was observed to propagate
-  unevenly across regions for a while after filing. Prefer a single-geo ``us.``
-  profile over a ``global.`` one for that reason.
+  calls can fail with ``ResourceNotFoundException: Model use case details have not
+  been submitted for this account``. Pick a profile supported by the caller's
+  Region: Haiku 4.5 uses ``global.`` from Mumbai, which may route worldwide.
 """
 
 import os
@@ -17,7 +16,7 @@ import os
 from strands import Agent
 from strands.models import BedrockModel
 
-#: Cheapest current Claude on a single-geo profile; override with BEDROCK_MODEL_ID.
+#: Standalone factory default; the runnable workflow requires an explicit model.
 DEFAULT_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
 DEFAULT_REGION = "us-east-1"
 
@@ -33,11 +32,14 @@ def bedrock_settings() -> tuple[str, str]:
     )
 
 
-def build_bedrock_agent() -> Agent:
+def build_bedrock_agent(*, model_id: str | None = None, region: str | None = None) -> Agent:
     """Build one fresh Bedrock-backed Agent for an Aga Step attempt."""
-    model_id, region = bedrock_settings()
+    configured_model, configured_region = bedrock_settings()
     return Agent(
-        model=BedrockModel(model_id=model_id, region_name=region),
+        model=BedrockModel(
+            model_id=model_id or configured_model,
+            region_name=region or configured_region,
+        ),
         system_prompt="Answer the research question plainly and cite uncertainty.",
         callback_handler=None,
         name="bedrock-research",

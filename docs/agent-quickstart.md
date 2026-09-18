@@ -18,10 +18,11 @@ that unfinished invocation are therefore **at least once**.
 
 Reach for `aga-strands` when an Agent invocation is one unit of durable work: you
 want it to survive a worker crash, replay its committed answer instead of paying
-for a second inference, stay inside the Namespace's token and cost ceilings, and
-have every tool that changes the outside world protected by a receipt. Research,
-classification, drafting, a checkout assistant — anything where the *answer* is
-what you keep.
+for a second inference, and report tokens against the Namespace's ceiling. A
+cost ceiling also needs a reviewed price function; the Bedrock example does not
+provide one. Use an effect receipt when an Agent invokes a mutating tool.
+Research, classification, drafting, and checkout assistance are examples where
+the *answer* is what you keep.
 
 Use plain `@app.step` functions when there is no model loop to run; Aga's own
 operations are cheaper and fully replayable.
@@ -36,9 +37,12 @@ repeat from reaching a provider twice.
 
 ## Install and run
 
-For this read-only local Agent, either the normal tutorial server or the
-source-built development server works. Install the current core SDK, the separate
-Strands adapter, and the example:
+Use the current source-built development server with this source SDK; the released
+0.2.1 server has a different wire generation. Install the current core SDK, the
+separate Strands adapter, and the example:
+
+From `sdk-examples`, start the [contributor stack](../README.md#build-the-development-stack-contributors)
+with `docker compose up -d`, then run:
 
 ```bash
 python -m pip install -e ../sdk-python
@@ -79,21 +83,46 @@ but returns a fixed, predictable response and uses no cloud account. See
 
 ## Use Bedrock only when you choose to
 
-[`bedrock.py`](../src/agent_quickstart/bedrock.py) contains an optional real-provider
-factory. Give that factory to `strands_adapter.agent(...)`, configure AWS credentials
-through the normal provider chain, and set `BEDROCK_MODEL_ID` when you need another
-model. Aga does not import or contact Bedrock on its core import path.
+[`bedrock.py`](../src/agent_quickstart/bedrock.py) contains the real-provider
+factory. The separate [`bedrock_workflows.py`](../src/agent_quickstart/bedrock_workflows.py)
+registers it only when `AGA_AGENT_BEDROCK=1`; the default worker stays cloud-free.
+Stop the default example worker before starting this one.
+Use normal AWS credentials (for example, an SSO profile), and set both the model
+and Region explicitly in **each** terminal. A confirmed Mumbai test uses:
+
+```bash
+export AGA_AGENT_BEDROCK=1
+export BEDROCK_REGION=ap-south-1
+export BEDROCK_MODEL_ID=global.anthropic.claude-haiku-4-5-20251001-v1:0
+python -m agent_quickstart.worker
+```
+
+From another terminal, with the same environment and virtual environment:
+
+```bash
+export AGA_AGENT_BEDROCK=1
+export BEDROCK_REGION=ap-south-1
+export BEDROCK_MODEL_ID=global.anthropic.claude-haiku-4-5-20251001-v1:0
+python -m agent_quickstart.submit --bedrock --wait "Explain durable execution in one sentence."
+```
+
+This is a real, billable model call. The `global.` profile can process the prompt
+outside India despite the `ap-south-1` endpoint; use synthetic input only unless
+that routing meets your data policy. The `us.` Haiku profile is not a Mumbai
+inference option. Aga does not import or contact Bedrock on its core import path.
+The example records token usage but has no Bedrock price function, so it does not
+claim an enforced cost ceiling; supply a reviewed `pricer` before production use.
 
 Two things this example learned the hard way. Bedrock is regional and Strands
 honours `region_name`, so the factory resolves `BEDROCK_REGION`, then `AWS_REGION`,
-then `AWS_DEFAULT_REGION`, then `us-east-1` and passes it explicitly — a session
-default with no Anthropic access fails permanently, and that is what an earlier run
-of this example hit.
+then `AWS_DEFAULT_REGION`, then `us-east-1` and passes it explicitly when used
+standalone. The runnable Bedrock workflow requires `BEDROCK_REGION` and
+`BEDROCK_MODEL_ID`, so it never silently uses those fallback defaults.
 And Anthropic models need the account's use-case form filed; until then every call
 fails with `ResourceNotFoundException: Model use case details have not been
 submitted for this account`, and that state was seen to propagate unevenly across
-regions for a while. The default is a single-geo `us.` profile for that reason —
-a `global.` profile routes wherever it likes.
+regions for a while. The standalone factory's default is a `us.` profile, which
+is not valid for the Mumbai example; its explicit `global.` selection is deliberate.
 
 Provider and framework retries must be kept bounded so they do not multiply Aga's
 retry policy. Configure provider connect and response timeouts below the Aga Step's
@@ -154,9 +183,9 @@ python -m agent_quickstart.submit --checkout 1200 --order-id tutorial-order-1 --
 tool on turn one and confirms on turn two, through Strands' real loop.
 
 The released tutorial server does not advertise effect receipts. Before trying a
-mutating tool, stop that tutorial stack and start the contributor stack with
-`docker compose up -d`; it builds the sibling server source that implements the
-effect contract. Capability negotiation then fails closed if either side is too old.
+mutating tool, use the source-built contributor stack from the setup above. It
+builds the sibling server source that implements the effect contract. Capability
+negotiation fails closed if either side is too old.
 
 This is the **opaque** adapter layer. It does not make each internal model call or
 tool call a separate Aga operation, and Strands checkpoints or sessions do not
