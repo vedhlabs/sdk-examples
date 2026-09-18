@@ -4,7 +4,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 from aga_strands import StrandsAdapter
+from strands.types.exceptions import EventLoopException
 
 from agent_quickstart import bedrock, workflows
 
@@ -134,6 +136,20 @@ def test_checkout_agent_is_bound_with_a_pricer_the_ceiling_can_use():
     assert workflows.checkout._step._spec.operation_class == "agent"
     assert workflows.local_price_micros("deterministic-checkout-v1", 12, 6) == 42
     assert set(workflows.app._catalog.workflows) == {"investigate", "place_order"}
+
+
+def test_checkout_model_never_describes_a_failed_tool_as_complete():
+    from unittest.mock import Mock
+
+    from aga_runtime import errors
+    from aga_runtime.workflow._runtime import step_binding
+
+    client = Mock()
+    client.effects.propose.side_effect = errors.CasConflict("stale fence")
+    agent = workflows.build_checkout_agent()
+    with step_binding.bound(client, "run-1.strands.checkout.1", 3):
+        with pytest.raises(EventLoopException, match="checkout tool failed"):
+            asyncio.run(agent.invoke_async("Please charge order order-42 for 1200 cents."))
 
 
 def test_bedrock_workflow_registers_only_with_explicit_model_and_region():

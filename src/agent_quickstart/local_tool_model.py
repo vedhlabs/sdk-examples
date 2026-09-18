@@ -90,6 +90,10 @@ def _latest_tool_result(messages: list[dict[str, Any]]) -> str:
         for block in reversed(message.get("content", [])):
             result = block.get("toolResult") if isinstance(block, dict) else None
             if isinstance(result, dict):
+                if result.get("status") == "error":
+                    # The model must not turn a rejected receipt or provider
+                    # failure into a successful checkout sentence.
+                    raise RuntimeError("checkout tool failed; no completion was recorded")
                 for part in result.get("content", []):
                     if isinstance(part, dict) and isinstance(part.get("text"), str):
                         return part["text"]

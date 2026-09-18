@@ -180,7 +180,10 @@ python -m agent_quickstart.submit --checkout 1200 --order-id tutorial-order-1 --
 ```
 
 [`local_tool_model.py`](../src/agent_quickstart/local_tool_model.py) asks for the
-tool on turn one and confirms on turn two, through Strands' real loop.
+tool on turn one and confirms on turn two, through Strands' real loop. It raises
+instead of claiming checkout succeeded when Strands returns a tool error. For a
+real model, do not treat a fluent final answer as proof that a payment or other
+external action happened: verify the provider outcome and the Aga effect receipt.
 
 The released tutorial server does not advertise effect receipts. Before trying a
 mutating tool, use the source-built contributor stack from the setup above. It
