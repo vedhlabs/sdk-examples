@@ -88,3 +88,30 @@ input and output without leaving the family.
 
 Canonical source:
 [`src/primitives/parallel_family.py`](../src/primitives/parallel_family.py).
+
+## See five separate workflows for one loan
+
+This local-only fixture starts application, KYC, underwriting, approval, and
+disbursement as **five independent root Runs**, in sequence. Each root declares
+the same `ResourceRef("loan", loan_id)`. Underwriting also starts one real owned
+document-check child. The shared loan ID groups the roots for inspection; it
+does not create a parent edge between them or enforce their business ordering.
+The functions return illustrative values and do not contact a bureau, approval
+service, or payment provider.
+
+```bash
+# terminal 1: keep the primitive worker running
+python -m primitives.worker
+
+# terminal 2: from the sdk-examples directory
+python -m primitives.loan_journey_submit --loan-id LOAN-DEMO-42
+```
+
+The submitter prints the five Run IDs and a link to the resource Journey. Open
+that link in the dashboard's selected Namespace. Click any of the five lanes
+to inspect its steps; the document-check lane is indented beneath underwriting
+because it has a recorded spawn edge. On a non-default local server, set
+`AGA_URL` for both terminals; the submitter uses it in the printed link.
+
+Canonical source: [`src/primitives/loan_journey.py`](../src/primitives/loan_journey.py)
+and [`src/primitives/loan_journey_submit.py`](../src/primitives/loan_journey_submit.py).
