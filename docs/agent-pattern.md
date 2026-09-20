@@ -100,6 +100,79 @@ provider returns the same receipt for the same key. A production provider also
 needs bounded network timeouts and an authoritative lookup after an uncertain
 response.
 
+## Drive a long-lived session with commands
+
+Continuation gives a session a longer life, but it does not give callers an
+ordered inbox. [`command_session.py`](../src/agent_pattern/command_session.py)
+shows that second boundary. Its ordinary loop waits for the next authenticated
+command, runs one durable agent Step, records a safe completion fact, and moves
+to a fresh Run after a bounded number of commands:
+
+```python
+while True:
+    command = await app.command(timeout=3600)
+    if command.kind == "stop":
+        return final_result
+    result = await handle_command(command.command_id, command.kind, command.payload)
+    if handled_here >= commands_per_generation:
+        app.continue_as_new(command_session, next_state)
+```
+
+`app.command` is a durable Workflow operation, not a process queue. The server
+binds the oldest queued command to its exact Promise in one PostgreSQL
+transaction. If the worker dies after that commit, recovery replays the same
+command. It does not consume the next one. The command being **delivered** only
+means Workflow code can replay it; the later Step or Workflow result records
+whether the application actually completed the work.
+
+Register desired state once with an administrator credential, then run the
+worker and start a session:
+
+```bash
+export AGA_RELEASE=mailbox-example-v1
+export AGA_MANIFEST_DIGEST=sha256:mailbox-example-v1
+export AGA_ADMIN_KEY=your-admin-key       # omit only on an auth-disabled local stack
+python -m agent_pattern.fleet_register
+
+python -m agent_pattern.worker
+python -m agent_pattern.mailbox_submit --session-id demo-conversation
+```
+
+Send two messages and stop the session from another terminal. A writer
+credential belongs in `AGA_API_KEY`; actor identity comes from that credential,
+not from command JSON:
+
+```bash
+python -m agent_pattern.mailbox_send demo-conversation "review application 42"
+python -m agent_pattern.mailbox_send demo-conversation "summarize the evidence"
+python -m agent_pattern.mailbox_send demo-conversation --kind stop
+```
+
+The sender reads the current mailbox revision, submits a stable command ID, and
+rereads once if another writer wins the revision race. Use `--command-id` when a
+caller may retry after losing an HTTP response. The same ID and content are
+idempotent; changing the content behind that ID is a conflict.
+
+Open **Agents** in the console. The agent row compares the registered release,
+manifest, replicas, and concurrency with worker heartbeats. Aga reports missing,
+extra, draining, gone, and mismatched workers; Docker, ECS, EKS, AgentCore, or
+another process manager still decides how many workers actually run. Select the
+session beneath that row to inspect every queued, delivered, or canceled command
+and follow its delivered Run into the execution workbench.
+
+The automated source-stack proof starts a worker, delivers one command, stops
+and restarts the worker around another command, crosses continuation generations,
+and then stops cleanly:
+
+```bash
+make smoke-command-mailbox
+```
+
+The mailbox has bounded payload, identifier, page, and queued-depth limits.
+History follows the retained logical session across Run generations. Reset will
+not discard a delivered command operation, because doing so would leave durable
+mailbox history claiming input was consumed while replay waited forever.
+
 ## What the gate verifies—and what it does not
 
 The unreleased verified-gate source binds the decision to an exact action,

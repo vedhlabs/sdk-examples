@@ -28,3 +28,9 @@ both caller styles.
 `kyc_parallel.py` makes that concurrency concrete with five distinct business
 Steps in one sticky Run. Its sync caller waits for one joined result, and its live
 smoke proves the five random two-to-three-second intervals overlap.
+
+`agent_pattern.command_session` is the current-source mailbox example. It keeps
+one logical session across bounded Run generations, accepts revision-fenced
+commands through the operator API, survives a worker restart, and exposes desired
+versus observed agent state. `scripts/smoke_command_mailbox.py` checks that path
+end to end against the unreleased source stack.

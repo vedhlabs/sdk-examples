@@ -1,6 +1,7 @@
 """Run the example worker with ``python -m agent_pattern.worker``."""
 
 from agent_pattern.app import app
+from agent_pattern.command_session import command_session  # noqa: F401
 from agent_pattern.session_workflow import research_session  # noqa: F401
 from agent_pattern.workflows import review_case  # noqa: F401 - registers the Workflow
 
