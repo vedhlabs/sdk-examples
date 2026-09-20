@@ -1,4 +1,4 @@
-"""Run five separate loan workflows and open their shared resource journey."""
+"""Run five loan workflows together and open their shared Case layout."""
 
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ def main() -> None:
 
     loan = {"loan_id": args.loan_id, "applicant": "Demo Applicant"}
     submission = uuid.uuid4().hex[:8]
+    handles = []
     for slug, workflow in (
         ("application", application),
         ("kyc", kyc),
@@ -35,14 +36,18 @@ def main() -> None:
             ),
             loan,
         )
+        handles.append((slug, handle))
         print(f"{slug}: {handle.id}", flush=True)
+
+    for slug, handle in handles:
         handle.result(timeout=60)
+        print(f"{slug}: completed", flush=True)
 
     query = urlencode({
-        "kind": "loan", "id": args.loan_id,
+        "q": f"resource:loan/{args.loan_id}",
         "namespace_id": os.getenv("AGA_NAMESPACE", "default"),
     })
-    print(f"{args.url.rstrip('/')}/resources?{query}")
+    print(f"{args.url.rstrip('/')}/runs?{query}")
 
 
 if __name__ == "__main__":

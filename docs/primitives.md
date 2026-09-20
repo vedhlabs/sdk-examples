@@ -89,15 +89,19 @@ input and output without leaving the family.
 Canonical source:
 [`src/primitives/parallel_family.py`](../src/primitives/parallel_family.py).
 
-## See five separate workflows for one loan
+## See one application across five workflows
 
 This local-only fixture starts application, KYC, underwriting, approval, and
-disbursement as **five independent root Runs**, in sequence. Each root declares
-the same `ResourceRef("loan", loan_id)`. Underwriting also starts one real owned
-document-check child. The shared loan ID groups the roots for inspection; it
-does not create a parent edge between them or enforce their business ordering.
-The functions return illustrative values and do not contact a bureau, approval
-service, or payment provider.
+disbursement as **five independent root Runs** on one App. The five roots are
+submitted together, and each contains four distinct durable Steps. Underwriting
+also starts one real owned document workflow with four more Steps. Every root
+declares the same `ResourceRef("loan", loan_id)`.
+
+The shared loan ID groups the roots for inspection; it does not invent parent
+edges or enforce business ordering. Only the document workflow is indented under
+underwriting because Aga recorded that child spawn. The functions sleep briefly
+to make measured work visible, return illustrative values, and do not contact a
+bureau, identity provider, approval service, or payment rail.
 
 ```bash
 # terminal 1: keep the primitive worker running
@@ -107,11 +111,12 @@ python -m primitives.worker
 python -m primitives.loan_journey_submit --loan-id LOAN-DEMO-42
 ```
 
-The submitter prints the five Run IDs and a link to the resource Journey. Open
-that link in the dashboard's selected Namespace. Click any of the five lanes
-to inspect its steps; the document-check lane is indented beneath underwriting
-because it has a recorded spawn edge. On a non-default local server, set
-`AGA_URL` for both terminals; the submitter uses it in the printed link.
+The submitter prints the five root Run IDs and a canonical `/runs` link. Open
+that link in the dashboard's selected Namespace, then choose **Show all steps**.
+One layout shows all five roots, the document child, and their ordered Steps.
+Select any Step to inspect its retained input and output below the layout. On a
+non-default local server, set `AGA_URL` for both terminals; the submitter uses it
+in the printed link.
 
 Canonical source: [`src/primitives/loan_journey.py`](../src/primitives/loan_journey.py)
 and [`src/primitives/loan_journey_submit.py`](../src/primitives/loan_journey_submit.py).
