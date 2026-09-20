@@ -55,6 +55,43 @@ in the dashboard. To experiment manually, start
 `python -m agent_pattern.worker` with your chosen `AGA_NAMESPACE`.
 
 Read [`workflows.py`](../src/agent_pattern/workflows.py) from top to bottom.
+
+## Let one agent session outlive one Run
+
+An agent can talk, research, or supervise work for much longer than one safe
+replay history. [`session_workflow.py`](../src/agent_pattern/session_workflow.py)
+keeps the application loop ordinary: plan one turn, start two independent tools,
+join them, then commit a summary. After two turns it asks Aga to continue the same
+logical session in a fresh physical Run:
+
+```python
+if turn < max_turns and completed_here >= turns_per_generation:
+    app.continue_as_new(research_session, next_state)
+```
+
+The call does not return. Aga atomically completes the current generation and
+starts the next one with `next_state`. The original Handle follows those links to
+the final answer. Only one root generation may be active for a `session_id`, so a
+second caller gets an explicit conflict instead of silently interleaving another
+writer into the conversation. The example carries counters and only the eight
+most recent turn summaries; continuation bounds execution history, but the
+application must also keep its carried state bounded.
+
+Start the same worker, then submit six turns split across three generations:
+
+```bash
+python -m agent_pattern.worker
+```
+
+```bash
+python -m agent_pattern.session_submit --turns 6 --turns-per-generation 2 --wait
+```
+
+Open the printed initial Run in the console. **Execution family** shows all three
+generations, every model/tool operation, and the child workflows belonging to
+each generation on one time axis. This example uses deterministic local Steps so
+it is free and repeatable; replace `plan_turn` and `summarize_turn` with complete
+model calls without moving the loop into framework-private middleware.
 `selected_tools` is an application allowlist: a model suggestion is data, not
 permission to run arbitrary code. `app.join` admits both check handles before
 waiting, so neither check is forced to wait for the other. `publish_decision`

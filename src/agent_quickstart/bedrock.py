@@ -12,8 +12,8 @@ not repeat them:
 """
 
 import os
-from decimal import Decimal, InvalidOperation, ROUND_CEILING
-from typing import Callable
+from collections.abc import Callable
+from decimal import ROUND_CEILING, Decimal, InvalidOperation
 
 from strands import Agent
 from strands.models import BedrockModel
