@@ -88,6 +88,29 @@ def test_bedrock_settings_prefer_explicit_region_then_aws_region_then_default(mo
     assert bedrock.DEFAULT_MODEL_ID.startswith("us.")
 
 
+def test_bedrock_pricer_uses_explicit_rates_and_rounds_cost_up(monkeypatch):
+    monkeypatch.setenv(bedrock.INPUT_PRICE_ENV, "0.80")
+    monkeypatch.setenv(bedrock.OUTPUT_PRICE_ENV, "4.00")
+
+    price = bedrock.bedrock_pricer_from_env()
+
+    assert price("model-is-pinned-by-the-adapter", 10, 5) == 28
+    monkeypatch.setenv(bedrock.INPUT_PRICE_ENV, "0.0001")
+    monkeypatch.setenv(bedrock.OUTPUT_PRICE_ENV, "0")
+    assert bedrock.bedrock_pricer_from_env()("model", 1, 0) == 1
+
+
+def test_bedrock_pricer_refuses_missing_or_invalid_rates(monkeypatch):
+    monkeypatch.delenv(bedrock.INPUT_PRICE_ENV, raising=False)
+    monkeypatch.setenv(bedrock.OUTPUT_PRICE_ENV, "4")
+    with pytest.raises(RuntimeError, match=bedrock.INPUT_PRICE_ENV):
+        bedrock.bedrock_pricer_from_env()
+
+    monkeypatch.setenv(bedrock.INPUT_PRICE_ENV, "not-a-price")
+    with pytest.raises(RuntimeError, match="non-negative decimal"):
+        bedrock.bedrock_pricer_from_env()
+
+
 def test_checkout_tool_reaches_app_effect_through_the_real_strands_loop():
     # The model asks for charge_card; Strands runs it on a to_thread worker; the
     # tool calls app.effect and must find the executing Step from that thread.
@@ -177,10 +200,14 @@ def test_bedrock_workflow_registers_only_with_explicit_model_and_region():
         check=False,
     )
     assert missing.returncode != 0
-    assert "explicit BEDROCK_MODEL_ID and BEDROCK_REGION" in missing.stderr
+    assert "Bedrock worker needs explicit configuration" in missing.stderr
+    assert "BEDROCK_MODEL_ID" in missing.stderr
+    assert bedrock.INPUT_PRICE_ENV in missing.stderr
 
     env["BEDROCK_MODEL_ID"] = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
     env["BEDROCK_REGION"] = "ap-south-1"
+    env[bedrock.INPUT_PRICE_ENV] = "1"
+    env[bedrock.OUTPUT_PRICE_ENV] = "5"
     ready = subprocess.run(
         [sys.executable, "-c", "from agent_quickstart import worker; "
          "print(sorted(worker.app._catalog.workflows)); "

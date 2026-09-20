@@ -94,6 +94,8 @@ and Region explicitly in **each** terminal. A confirmed Mumbai test uses:
 export AGA_AGENT_BEDROCK=1
 export BEDROCK_REGION=ap-south-1
 export BEDROCK_MODEL_ID=global.anthropic.claude-haiku-4-5-20251001-v1:0
+export BEDROCK_INPUT_USD_PER_MILLION_TOKENS='<current input rate>'
+export BEDROCK_OUTPUT_USD_PER_MILLION_TOKENS='<current output rate>'
 python -m agent_quickstart.worker
 ```
 
@@ -103,21 +105,32 @@ From another terminal, with the same environment and virtual environment:
 export AGA_AGENT_BEDROCK=1
 export BEDROCK_REGION=ap-south-1
 export BEDROCK_MODEL_ID=global.anthropic.claude-haiku-4-5-20251001-v1:0
+export BEDROCK_INPUT_USD_PER_MILLION_TOKENS='<same current input rate>'
+export BEDROCK_OUTPUT_USD_PER_MILLION_TOKENS='<same current output rate>'
 python -m agent_quickstart.submit --bedrock --wait "Explain durable execution in one sentence."
 ```
+
+Replace both price placeholders with the current AWS price for the exact model
+and routing profile before starting either process. They are USD per one million
+tokens, and the example conservatively rounds the calculated micro-USD total up.
+Rates are configuration rather than source code because a built-in price list can
+silently become stale. Missing or malformed rates stop the worker instead of
+recording a paid model call as zero cost.
 
 This is a real, billable model call. The `global.` profile can process the prompt
 outside India despite the `ap-south-1` endpoint; use synthetic input only unless
 that routing meets your data policy. The `us.` Haiku profile is not a Mumbai
 inference option. Aga does not import or contact Bedrock on its core import path.
-The example records token usage but has no Bedrock price function, so it does not
-claim an enforced cost ceiling; supply a reviewed `pricer` before production use.
+The example records token usage and the explicitly configured price, so the
+Namespace `max_cost_micros` ceiling can see the call. Keep those rates under the
+same review process as the selected model.
 
 Two things this example learned the hard way. Bedrock is regional and Strands
 honours `region_name`, so the factory resolves `BEDROCK_REGION`, then `AWS_REGION`,
 then `AWS_DEFAULT_REGION`, then `us-east-1` and passes it explicitly when used
 standalone. The runnable Bedrock workflow requires `BEDROCK_REGION` and
-`BEDROCK_MODEL_ID`, so it never silently uses those fallback defaults.
+`BEDROCK_MODEL_ID` and both price rates, so it never silently uses fallback
+identity or zero-cost accounting.
 And Anthropic models need the account's use-case form filed; until then every call
 fails with `ResourceNotFoundException: Model use case details have not been
 submitted for this account`, and that state was seen to propagate unevenly across

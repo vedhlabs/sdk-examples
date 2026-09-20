@@ -3,14 +3,23 @@
 import os
 
 from agent_quickstart.app import app, strands_adapter
-from agent_quickstart.bedrock import bedrock_settings, build_bedrock_agent
+from agent_quickstart.bedrock import (
+    INPUT_PRICE_ENV,
+    OUTPUT_PRICE_ENV,
+    bedrock_pricer_from_env,
+    bedrock_settings,
+    build_bedrock_agent,
+)
 
-if not os.environ.get("BEDROCK_MODEL_ID") or not os.environ.get("BEDROCK_REGION"):
+required = ("BEDROCK_MODEL_ID", "BEDROCK_REGION", INPUT_PRICE_ENV, OUTPUT_PRICE_ENV)
+missing = [name for name in required if not os.environ.get(name)]
+if missing:
     raise RuntimeError(
-        "Bedrock worker and caller both need explicit BEDROCK_MODEL_ID and BEDROCK_REGION"
+        "Bedrock worker needs explicit configuration: " + ", ".join(missing)
     )
 
 model_id, region = bedrock_settings()
+price_micros = bedrock_pricer_from_env()
 
 
 def build_agent():
@@ -24,6 +33,7 @@ research_bedrock = strands_adapter.agent(
     provider="bedrock",
     model=model_id,
     model_settings={"region": region},
+    pricer=price_micros,
 )
 
 
