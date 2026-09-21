@@ -146,8 +146,9 @@ only when the provider proves it absent, and escalate an outcome the provider st
 The local effect store exposes `effect(scope, key)` so the examples can demonstrate that lookup.
 See [external effects and uncertain outcomes](docs/external-effects.md).
 
-`client.apply_once(...)` is useful as an Aga-side admission marker. It is not, by itself, an
-atomic exactly-once wrapper around a separate network request.
+Do not use an Aga-side marker as a substitute for provider idempotency. Put the
+external call behind `app.effect(...)`, send the effect key to the provider as
+its idempotency key, and reconcile any unknown outcome before another attempt.
 
 ## Verification
 

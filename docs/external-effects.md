@@ -89,8 +89,8 @@ honest. A real integration should also run a reconciliation job that finds
 business operations without an Aga receipt, looks them up by key, and records or
 escalates the provider's answer.
 
-`client.apply_once` only reserves an Aga-side key. It cannot atomically wrap a
-network request. `app.effect` records what Aga knows, refuses blind re-execution
-after an uncertain attempt, and keeps the Run from normal retention while the
-question is open. It cannot make a provider idempotent or interrupt a blocked
-socket; those remain application and provider responsibilities.
+`app.effect` records what Aga knows, refuses blind re-execution after an
+uncertain attempt, and keeps the Run from normal retention while the question
+is open. It cannot make a provider idempotent or interrupt a blocked socket;
+those remain application and provider responsibilities. Keep ordinary business
+state in the application's own database.
