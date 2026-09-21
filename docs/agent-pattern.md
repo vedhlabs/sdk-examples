@@ -173,6 +173,41 @@ History follows the retained logical session across Run generations. Reset will
 not discard a delivered command operation, because doing so would leave durable
 mailbox history claiming input was consumed while replay waited forever.
 
+## Qualify a large parked fleet
+
+`scripts/agent_fleet_qualification.py` is the source-candidate fleet gate, not a
+demo benchmark. It starts 1,000 independent command sessions, waits until every
+session is parked with no worker slot occupied, and observes worker CPU and RSS
+for 30 seconds. It then sends one bounded 100 ms command to every session,
+hard-kills an in-flight worker from the four-worker fleet halfway through the burst,
+waits for every session to continue to
+its second bounded Run, and finally drains all 1,000 sessions with ordered stop
+commands.
+
+The committed policy in `scripts/agent_fleet_policy.json` fixes the thresholds
+before measurement. The report distinguishes atomic mailbox delivery from
+application processing: delivery can be immediate when a wait is already
+registered, while command-processing latency includes queueing, the durable
+Agent Step, and the continuation commit.
+
+Run the gate only against an isolated authenticated Namespace. It requires a
+worker credential in `AGA_API_KEY` and an administrator credential in
+`AGA_ADMIN_KEY` so desired fleet state can be registered independently of worker
+identity:
+
+```bash
+export AGA_URL=https://aga.example.internal
+export AGA_NAMESPACE=fleet-qualification
+export AGA_API_KEY=worker-secret
+export AGA_ADMIN_KEY=admin-secret
+make fleet-qualification
+```
+
+A passing report is labelled `local-large-fleet`. It proves the fixed workload
+against the named deployment; it does not by itself prove a cloud deployment,
+multi-day endurance, Aurora failover, or a different worker count and model/tool
+latency profile.
+
 ## What the gate verifies—and what it does not
 
 The unreleased verified-gate source binds the decision to an exact action,

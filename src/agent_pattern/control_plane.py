@@ -36,11 +36,27 @@ class ControlPlane:
         path = f"/api/sessions/{_segment(session_id)}/commands?limit=200"
         return self._call("GET", path)
 
-    def sessions(self, *, agent_id: str = "") -> dict[str, Any]:
-        query = "?limit=200"
+    def sessions(
+        self,
+        *,
+        agent_id: str = "",
+        cursor: str = "",
+        limit: int = 200,
+    ) -> dict[str, Any]:
+        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 200:
+            raise ValueError("session page limit must be between 1 and 200")
+        query = f"?limit={limit}"
         if agent_id:
             query += "&agent_id=" + parse.quote(agent_id, safe="")
+        if cursor:
+            query += "&cursor=" + parse.quote(cursor, safe="")
         return self._call("GET", "/api/sessions" + query)
+
+    def workers(self) -> dict[str, Any]:
+        return self._call("GET", "/api/workers")
+
+    def metrics(self) -> dict[str, Any]:
+        return self._call("GET", "/api/metrics")
 
     def send_command(
         self,

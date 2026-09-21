@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import aga_runtime as aga
@@ -21,6 +22,11 @@ def handle_command(command_id: str, kind: str, payload: Any) -> dict[str, Any]:
     text = payload["text"].strip()
     if not text:
         raise ValueError("a message command requires nonempty payload.text")
+    work_ms = payload.get("work_ms", 0)
+    if isinstance(work_ms, bool) or not isinstance(work_ms, int) or not 0 <= work_ms <= 1_000:
+        raise ValueError("message payload.work_ms must be an integer between 0 and 1000")
+    if work_ms:
+        time.sleep(work_ms / 1000)
     return {
         "command_id": command_id,
         "kind": kind,
@@ -38,12 +44,8 @@ async def command_session(state: dict[str, Any]) -> dict[str, Any]:
     """Receive ordered commands and continue before one Run grows too large."""
     handled = _bounded_int(state, "handled", minimum=0, maximum=100_000)
     generation = _bounded_int(state, "generation", minimum=1, maximum=100_000)
-    commands_per_generation = _bounded_int(
-        state, "commands_per_generation", minimum=1, maximum=32
-    )
-    command_timeout = _bounded_number(
-        state, "command_timeout", minimum=0.1, maximum=86_400.0
-    )
+    commands_per_generation = _bounded_int(state, "commands_per_generation", minimum=1, maximum=32)
+    command_timeout = _bounded_number(state, "command_timeout", minimum=0.1, maximum=86_400.0)
     carried = state.get("recent_results", [])
     if not isinstance(carried, list):
         raise ValueError("recent_results must be a list")
@@ -91,18 +93,14 @@ async def command_session(state: dict[str, Any]) -> dict[str, Any]:
             )
 
 
-def _bounded_int(
-    state: dict[str, Any], name: str, *, minimum: int, maximum: int
-) -> int:
+def _bounded_int(state: dict[str, Any], name: str, *, minimum: int, maximum: int) -> int:
     value = state.get(name)
     if isinstance(value, bool) or not isinstance(value, int) or not minimum <= value <= maximum:
         raise ValueError(f"{name} must be an integer between {minimum} and {maximum}")
     return value
 
 
-def _bounded_number(
-    state: dict[str, Any], name: str, *, minimum: float, maximum: float
-) -> float:
+def _bounded_number(state: dict[str, Any], name: str, *, minimum: float, maximum: float) -> float:
     value = state.get(name)
     if isinstance(value, bool) or not isinstance(value, int | float):
         raise ValueError(f"{name} must be a number between {minimum} and {maximum}")

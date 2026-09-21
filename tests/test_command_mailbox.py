@@ -65,6 +65,26 @@ def test_mailbox_session_handles_ordered_commands_and_stops(monkeypatch):
     ]
 
 
+def test_command_work_is_bounded(monkeypatch):
+    sleeps = []
+    monkeypatch.setattr(command_session.time, "sleep", sleeps.append)
+
+    result = command_session.handle_command.__wrapped__(
+        "command-1", "message", {"text": "hello", "work_ms": 125}
+    )
+
+    assert result["status"] == "answered"
+    assert sleeps == [0.125]
+
+
+@pytest.mark.parametrize("work_ms", [-1, 1001, True, 1.5])
+def test_command_work_refuses_unbounded_delay(work_ms):
+    with pytest.raises(ValueError, match="between 0 and 1000"):
+        command_session.handle_command.__wrapped__(
+            "command-1", "message", {"text": "hello", "work_ms": work_ms}
+        )
+
+
 def test_mailbox_session_continues_with_bounded_committed_state(monkeypatch):
     class Continued(Exception):
         pass
@@ -170,3 +190,33 @@ def test_control_plane_updates_desired_state_with_registry_revision(monkeypatch)
     patch = calls[-1]
     assert patch[0:2] == ("PATCH", "/api/agents/agent-pattern")
     assert patch[2]["expected_revision"] == 7
+
+
+def test_control_plane_pages_sessions_and_reads_runtime_facts(monkeypatch):
+    client = ControlPlane(url="http://aga", namespace="demo")
+    calls = []
+
+    def call(method, path, body=None):
+        calls.append((method, path, body))
+        return {}
+
+    monkeypatch.setattr(client, "_call", call)
+    client.sessions(agent_id="fleet agent", cursor="session/200", limit=200)
+    client.workers()
+    client.metrics()
+
+    assert calls == [
+        (
+            "GET",
+            "/api/sessions?limit=200&agent_id=fleet%20agent&cursor=session%2F200",
+            None,
+        ),
+        ("GET", "/api/workers", None),
+        ("GET", "/api/metrics", None),
+    ]
+
+
+@pytest.mark.parametrize("limit", [0, 201, True, 1.5])
+def test_control_plane_refuses_invalid_session_page_size(limit):
+    with pytest.raises(ValueError, match="between 1 and 200"):
+        ControlPlane(url="http://aga", namespace="demo").sessions(limit=limit)

@@ -155,11 +155,16 @@ its idempotency key, and reconcile any unknown outcome before another attempt.
 ```bash
 make check       # lint, unit tests, source coverage checks
 make smoke       # end-to-end runs against the local engine
+make fleet-qualification # authenticated 1,000-session fleet gate
 ```
 
 `make smoke` starts temporary workers, submits representative workflows, resolves their pending
 external waits, and checks terminal outputs. It does not reset PostgreSQL. Use
 `docker compose down -v` only when you intentionally want a new local database.
+The fleet gate is separate because it needs an isolated authenticated deployment,
+four workers, and both worker and administrator credentials. Its fixed policy
+and evidence contract are described in the
+[agent pattern guide](docs/agent-pattern.md#qualify-a-large-parked-fleet).
 
 ## Optional Alpaca paper adapter
 

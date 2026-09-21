@@ -1,0 +1,15 @@
+{
+  "schema": "aga-agent-fleet-policy-v1",
+  "name": "local-1000-session-fleet-v1",
+  "minimumSessions": 1000,
+  "minimumWorkers": 4,
+  "idleObservationSeconds": 30,
+  "maximumProvisionSeconds": 300,
+  "maximumSubmitP99Ms": 250,
+  "maximumSessionPageP99Ms": 500,
+  "maximumIdleWorkerCpuPercent": 5,
+  "maximumWorkerRssBytes": 134217728,
+  "maximumCommandProcessingP99Ms": 120000,
+  "maximumDrainSeconds": 180,
+  "maximumFailedRuns": 0
+}

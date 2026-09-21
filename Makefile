@@ -1,4 +1,4 @@
-.PHONY: install engine engine-down test lint check smoke smoke-agent smoke-agent-pattern smoke-command-mailbox smoke-first smoke-kyc clean-state
+.PHONY: install engine engine-down test lint check smoke smoke-agent smoke-agent-pattern smoke-command-mailbox smoke-first smoke-kyc fleet-qualification clean-state
 
 install:
 	python -m pip install -e ".[dev,alpaca]"
@@ -34,6 +34,9 @@ smoke-agent-pattern:
 
 smoke-command-mailbox:
 	python scripts/smoke_command_mailbox.py
+
+fleet-qualification:
+	python -m scripts.agent_fleet_qualification
 
 clean-state:
 	rm -rf .state audit.log
